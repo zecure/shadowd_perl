@@ -119,9 +119,39 @@ sub _get_input {
 		$input{'SERVER|' . _escape_key($key)} = $query->http($key);
 	}
 
-	# TODO: apply ignore list
-
 	return \%input;
+}
+
+sub _remove_ignored {
+	my ($input, $file, $caller) = @_;
+
+	if (!$file) {
+		return $input;
+	}
+
+	open my $handler, $file or die("could not open ignore file: " . $!);
+
+	while (my $line = <$handler>) {
+		chomp($line);
+
+		if ($line =~ /(.+?)(\s+)(.+)/) {
+			if ($3 ne $caller) {
+				next;
+			}
+
+			if (defined $input->{$1}) {
+				delete $input->{$1};
+			}
+		} else {
+			if (defined $input->{$line}) {
+				delete $input->{$line};
+			}
+		}
+	}
+
+	close $handler;
+
+	return $input;
 }
 
 sub _defuse_input {
@@ -184,12 +214,12 @@ sub _init_connection {
 }
 
 sub _send_connection {
-	my ($connection, $profile, $key, $input) = @_;
+	my ($connection, $profile, $key, $input, $client_ip, $caller) = @_;
 
 	my %input_data = (
 		'version'   => SHADOWD_CONNECTOR_VERSION,
-		'client_ip' => $query->remote_addr(),
-		'caller'    => $ENV{'SCRIPT_FILENAME'},
+		'client_ip' => $client_ip,
+		'caller'    => $caller,
 		'input'     => $input
 	);
 
@@ -215,19 +245,28 @@ BEGIN {
 
 		_init_config();
 
+		my $client_ip = (_get_config('client_ip') ? $ENV{_get_config('client_ip')} : $ENV{'REMOTE_ADDR'});
+		my $caller = (_get_config('caller') ? $ENV{_get_config('caller')} : $ENV{'SCRIPT_FILENAME'});
+
 		my $connection = _init_connection(
 			(_get_config('host') || '127.0.0.1'),
 			(_get_config('port') || '9115'),
 			_get_config('ssl')
 		);
 
-		my $input = _get_input();
+		my $input = _remove_ignored(
+			_get_input(),
+			_get_config('ignore'),
+			$caller
+		);
 
 		my $threats = _send_connection(
 			$connection,
 			_get_config('profile', CONFIG_REQUIRED),
 			_get_config('key', CONFIG_REQUIRED),
-			$input
+			$input,
+			$client_ip,
+			$caller
 		);
 
 		close $connection;
@@ -238,11 +277,14 @@ BEGIN {
 	};
 
 	if ($@) {
-		# TODO: add debug
-
 		if (!_get_config('observe')) {
 			print $query->header(-status => '500 Internal Server Error');
 			print '<h1>500 Internal Server Error</h1>';
+
+			if (_get_config('debug')) {
+				print $@;
+			}
+
 			exit;
 		}
 	}
