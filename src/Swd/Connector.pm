@@ -25,6 +25,7 @@ use Config::IniFiles;
 use IO::Socket;
 use IO::Socket::SSL;
 use Crypt::Mac::HMAC qw(hmac_hex);
+use URI::Encode qw(uri_encode);
 
 use constant {
 	SHADOWD_CONNECTOR_VERSION        => '0.0.1-perl',
@@ -157,6 +158,11 @@ sub _remove_ignored {
 sub _defuse_input {
 	my ($threats) = @_;
 
+	my %cookies;
+	foreach my $cookie ($query->cookie()) {
+		$cookies{$cookie} = $query->cookie($cookie);
+	}
+
 	foreach my $path (@{$threats}) {
 		my @path_split = split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
 
@@ -169,7 +175,7 @@ sub _defuse_input {
 		if ($path_split[0] eq 'SERVER') {
 			$ENV{$key} = '';
 		} elsif ($path_split[0] eq 'COOKIE') {
-			# TODO: add real cookie support
+			delete $cookies{$key};
 		} else {
 			if ($#path_split == 1) {
 				$query->param($key, '');
@@ -186,6 +192,20 @@ sub _defuse_input {
 
 	# Overwrite the query string in the env in case that the target does not use CGI.
 	$ENV{'QUERY_STRING'} = $query->query_string;
+
+	if ($query->cookie()) {
+		my $cookie_string = '';
+
+		foreach my $cookie (keys %cookies) {
+			$cookie_string .= uri_encode($cookie) . '=' . uri_encode($cookies{$cookie}) . ';';
+		}
+
+		# Remove last semicolon.
+		chop($cookie_string);
+
+		# Overwrite the cookie string.
+		$ENV{'HTTP_COOKIE'} = $cookie_string;
+	}
 }
 
 sub _init_connection {
