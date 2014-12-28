@@ -18,6 +18,8 @@ package Swd::Connector;
 
 use strict;
 
+use Data::Dump;
+
 use CGI;
 use JSON;
 use Switch;
@@ -136,15 +138,19 @@ sub _defuse_input {
 			next;
 		}
 
+		my $key = _unescape_key($path_split[1]);
+
 		if ($path_split[0] eq 'SERVER') {
-			$ENV{_unescape_key($path_split[1])} = '';
+			$ENV{$key} = '';
 		} elsif ($path_split[0] eq 'COOKIE') {
 			# TODO: add real cookie support
 		} else {
 			if ($#path_split == 1) {
-				$query->param(_unescape_key($path_split[1]), '');
+				$query->param($key, '');
 			} else {
-				# TODO: add array support
+				my @array = $query->param($key);
+				$array[$path_split[2]] = '';
+				$query->param($key, @array);
 			}
 		}
 	}
