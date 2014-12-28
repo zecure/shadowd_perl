@@ -112,11 +112,11 @@ sub _get_input {
 	}
 
 	foreach my $key ($query->cookie()) {
-		$input{'COOKIE|' . $key} = $query->cookie($key);
+		$input{'COOKIE|' . _escape_key($key)} = $query->cookie($key);
 	}
 
 	foreach my $key ($query->http()) {
-		$input{'SERVER|' . $key} = $query->http($key);
+		$input{'SERVER|' . _escape_key($key)} = $query->http($key);
 	}
 
 	# TODO: apply ignore list
