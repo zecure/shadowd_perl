@@ -18,8 +18,6 @@ package Swd::Connector;
 
 use strict;
 
-use Data::Dump;
-
 use CGI;
 use JSON;
 use Switch;
@@ -114,9 +112,7 @@ sub _get_input {
 	}
 
 	foreach my $key ($query->cookie()) {
-		my $value = $query->cookie($key);
-
-		$input{'COOKIE|' . $key} = $value;
+		$input{'COOKIE|' . $key} = $query->cookie($key);
 	}
 
 	foreach my $key ($query->http()) {
