@@ -159,6 +159,7 @@ sub _defuse_input {
 	my ($threats) = @_;
 
 	my %cookies;
+
 	foreach my $cookie ($query->cookie()) {
 		$cookies{$cookie} = $query->cookie($cookie);
 	}
@@ -193,7 +194,7 @@ sub _defuse_input {
 	# Overwrite the query string in the env in case that the target does not use CGI.
 	$ENV{'QUERY_STRING'} = $query->query_string;
 
-	if ($query->cookie()) {
+	if (defined $ENV{'HTTP_COOKIE'}) {
 		my $cookie_string = '';
 
 		foreach my $cookie (keys %cookies) {
