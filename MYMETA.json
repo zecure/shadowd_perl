@@ -1,0 +1,48 @@
+{
+   "abstract" : "Perl connector for Shadow Daemon web application firewall",
+   "author" : [
+      "Hendrik Buchwald <hb@zecure.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Swd-Connector",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "CGI" : "0",
+            "Config::IniFiles" : "0",
+            "Crypt::Mac::HMAC" : "0",
+            "IO::Socket" : "0",
+            "IO::Socket::SSL" : "0",
+            "JSON" : "0",
+            "Switch" : "0",
+            "URI::Encode" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "1.00"
+}
