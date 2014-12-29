@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Swd::Connector;
+package Swd::Connector 1.00;
 
 use strict;
 
@@ -28,7 +28,7 @@ use Crypt::Mac::HMAC qw(hmac_hex);
 use URI::Encode qw(uri_encode);
 
 use constant {
-	SHADOWD_CONNECTOR_VERSION        => '0.0.1-perl',
+	SHADOWD_CONNECTOR_VERSION        => '1.0.0-perl',
 	SHADOWD_CONNECTOR_CONFIG         => '/etc/shadowd/connectors.ini',
 	SHADOWD_CONNECTOR_CONFIG_SECTION => 'shadowd_perl',
 	CONFIG_REQUIRED                  => 1,
