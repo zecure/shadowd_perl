@@ -18,6 +18,7 @@ no_index:
     - t
     - inc
 requires:
+  Attribute::Abstract: 0
   CGI: 0
   Config::IniFiles: 0
   Crypt::Mac::HMAC: 0

@@ -4,14 +4,15 @@ use strict;
 use ExtUtils::MakeMaker qw(WriteMakefile);
 
 my %prereq = (
-	'CGI'               => 0,
-	'JSON'              => 0,
-	'Switch'            => 0,
-	'Config::IniFiles'  => 0,
-	'IO::Socket'        => 0,
-	'IO::Socket::SSL'   => 0,
-	'Crypt::Mac::HMAC'  => 0,
-	'URI::Encode'       => 0,
+	'CGI'                 => 0,
+	'JSON'                => 0,
+	'Switch'              => 0,
+	'Config::IniFiles'    => 0,
+	'IO::Socket'          => 0,
+	'IO::Socket::SSL'     => 0,
+	'Crypt::Mac::HMAC'    => 0,
+	'URI::Encode'         => 0,
+	'Attribute::Abstract' => 0
 );
 
 WriteMakefile(

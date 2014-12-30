@@ -18,7 +18,6 @@ package Swd::Connector 1.00;
 
 use strict;
 
-use CGI;
 use JSON;
 use Switch;
 use Config::IniFiles;
@@ -26,6 +25,7 @@ use IO::Socket;
 use IO::Socket::SSL;
 use Crypt::Mac::HMAC qw(hmac_hex);
 use URI::Encode qw(uri_encode);
+use Attribute::Abstract;
 
 use constant {
 	SHADOWD_CONNECTOR_VERSION        => '1.0.0-perl',
@@ -39,34 +39,54 @@ use constant {
 	STATUS_ATTACK                    => 5
 };
 
-my ($query, $config, $section);
+sub _get_client_ip: Abstract;
+sub _get_caller: Abstract;
+sub _error: Abstract;
+sub get_input: Abstract;
+sub defuse_input: Abstract;
+
+sub new {
+	my ($class) = @_;
+
+	my $self = {
+		'_config'         => undef,
+		'_config_file'    => undef,
+		'_config_section' => undef,
+		'_connection'     => undef,
+		'_client_ip'      => undef,
+		'_caller'         => undef
+	};
+
+	bless $self, $class;
+	return $self;
+}
 
 sub _init_config {
-	my $file;
+	my ($self) = @_;
 
 	if (defined $ENV{'SHADOWD_CONNECTOR_CONFIG'}) {
-		$file = $ENV{'SHADOWD_CONNECTOR_CONFIG'};
+		$self->{'_config_file'} = $ENV{'SHADOWD_CONNECTOR_CONFIG'};
 	} else {
-		$file = SHADOWD_CONNECTOR_CONFIG;
+		$self->{'_config_file'} = SHADOWD_CONNECTOR_CONFIG;
 	}
 
-	$config = Config::IniFiles->new(-file => $file);
+	$self->{'_config'} = Config::IniFiles->new(-file => $self->{'_config_file'});
 
-	if (!$config) {
+	if (!$self->{'_config'}) {
 		die('config error');
 	}
 
 	if (defined $ENV{'SHADOWD_CONNECTOR_CONFIG_SECTION'}) {
-		$section = $ENV{'SHADOWD_CONNECTOR_CONFIG_SECTION'};
+		$self->{'_config_section'} = $ENV{'SHADOWD_CONNECTOR_CONFIG_SECTION'};
 	} else {
-		$section = SHADOWD_CONNECTOR_CONFIG_SECTION;
+		$self->{'_config_section'} = SHADOWD_CONNECTOR_CONFIG_SECTION;
 	}
 }
 
-sub _get_config {
-	my ($key, $required) = @_;
+sub get_config {
+	my ($self, $key, $required) = @_;
 
-	if (!$config->exists($section, $key)) {
+	if (!$self->{'_config'}->exists($self->{'_config_section'}, $key)) {
 		if ($required) {
 			die($key . ' in config missing');
 		}
@@ -74,11 +94,32 @@ sub _get_config {
 		return 0;
 	}
 
-	return $config->val($section, $key);
+	return $self->{'_config'}->val($self->{'_config_section'}, $key);
 }
 
-sub _escape_key {
-	my ($key) = @_;
+sub _init_connection {
+	my ($self, $host, $port, $ssl) = @_;
+
+	if ($ssl) {
+		$self->{'_connection'} = IO::Socket::SSL->new(
+			PeerHost        => $host,
+			PeerPort        => $port,
+			SSL_verify_mode => SSL_VERIFY_PEER,
+			SSL_ca_file     => $ssl
+		) or die('network error (ssl): ' . $!);
+	} else {
+		$self->{'_connection'} = IO::Socket::INET->new(
+			PeerAddr => $host,
+			PeerPort => $port
+		) or die('network error: ' . $!);
+	}
+
+	# Send immediately.
+	$self->{'_connection'}->autoflush(1);
+}
+
+sub escape_key {
+	my ($self, $key) = @_;
 
 	$key =~ s/\\/\\\\/g;
 	$key =~ s/\|/\\|/g;
@@ -86,8 +127,8 @@ sub _escape_key {
 	return $key;
 }
 
-sub _unescape_key {
-	my ($key) = @_;
+sub unescape_key {
+	my ($self, $key) = @_;
 
 	$key =~ s/\\\\/\\/g;
 	$key =~ s/\\\|/|/g;
@@ -95,48 +136,20 @@ sub _unescape_key {
 	return $key;
 }
 
-sub _get_input {
-	my $method = $query->request_method();
-
-	my %input;
-
-	foreach my $key ($query->param()) {
-		my @value = $query->param($key);
-
-		if ($#value > 0){
-			for my $index (0 .. $#value) {
-				$input{$method . '|' . _escape_key($key) . '|' . $index} = $value[$index];
-			}
-		} else {
-			$input{$method . '|' . _escape_key($key)} = $value[0];
-		}
-	}
-
-	foreach my $key ($query->cookie()) {
-		$input{'COOKIE|' . _escape_key($key)} = $query->cookie($key);
-	}
-
-	foreach my $key ($query->http()) {
-		$input{'SERVER|' . _escape_key($key)} = $query->http($key);
-	}
-
-	return \%input;
-}
-
-sub _remove_ignored {
-	my ($input, $file, $caller) = @_;
+sub remove_ignored {
+	my ($self, $input, $file) = @_;
 
 	if (!$file) {
 		return $input;
 	}
 
-	open my $handler, $file or die("could not open ignore file: " . $!);
+	open my $handler, $file or die('could not open ignore file: ' . $!);
 
 	while (my $line = <$handler>) {
 		chomp($line);
 
 		if ($line =~ /(.+?)(\s+)(.+)/) {
-			if ($3 ne $caller) {
+			if ($3 ne $self->{'_caller'}) {
 				next;
 			}
 
@@ -155,94 +168,17 @@ sub _remove_ignored {
 	return $input;
 }
 
-sub _defuse_input {
-	my ($threats) = @_;
-
-	my %cookies;
-
-	foreach my $cookie ($query->cookie()) {
-		$cookies{$cookie} = $query->cookie($cookie);
-	}
-
-	foreach my $path (@{$threats}) {
-		my @path_split = split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
-
-		if ($#path_split < 1) {
-			next;
-		}
-
-		my $key = _unescape_key($path_split[1]);
-
-		if ($path_split[0] eq 'SERVER') {
-			$ENV{$key} = '';
-		} elsif ($path_split[0] eq 'COOKIE') {
-			delete $cookies{$key};
-		} else {
-			if ($#path_split == 1) {
-				$query->param($key, '');
-			} else {
-				my @array = $query->param($key);
-				$array[$path_split[2]] = '';
-				$query->param($key, @array);
-			}
-		}
-	}
-
-	# Save the changes for the CGI module.
-	$query->save_request();
-
-	# Overwrite the query string in the env in case that the target does not use CGI.
-	$ENV{'QUERY_STRING'} = $query->query_string;
-
-	if (defined $ENV{'HTTP_COOKIE'}) {
-		my $cookie_string = '';
-
-		foreach my $cookie (keys %cookies) {
-			$cookie_string .= uri_encode($cookie) . '=' . uri_encode($cookies{$cookie}) . ';';
-		}
-
-		# Remove last semicolon.
-		chop($cookie_string);
-
-		# Overwrite the cookie string.
-		$ENV{'HTTP_COOKIE'} = $cookie_string;
-	}
-}
-
-sub _init_connection {
-	my ($host, $port, $ssl) = @_;
-
-	my $connection;
-
-	if ($ssl) {
-		$connection = IO::Socket::SSL->new(
-			PeerHost        => $host,
-			PeerPort        => $port,
-			SSL_verify_mode => SSL_VERIFY_PEER,
-			SSL_ca_file     => $ssl
-		) or die("network error (ssl): " . $!);
-	} else {
-		$connection = IO::Socket::INET->new(
-			PeerAddr => $host,
-			PeerPort => $port
-		) or die("network error: " . $!);
-	}
-
-	# Send immediately.
-	$connection->autoflush(1);
-
-	return $connection;
-}
-
-sub _send_connection {
-	my ($connection, $profile, $key, $input, $client_ip, $caller) = @_;
+sub send_input {
+	my ($self, $profile, $key, $input) = @_;
 
 	my %input_data = (
 		'version'   => SHADOWD_CONNECTOR_VERSION,
-		'client_ip' => $client_ip,
-		'caller'    => $caller,
+		'client_ip' => $self->{'_client_ip'},
+		'caller'    => $self->{'_caller'},
 		'input'     => $input
 	);
+
+	my $connection = $self->{'_connection'};
 
 	my $json = encode_json(\%input_data);
 	print $connection $profile . "\n" . hmac_hex('SHA256', $key, $json) . "\n" . $json . "\n";
@@ -260,50 +196,43 @@ sub _send_connection {
 	}
 }
 
-BEGIN {
+sub start {
+	my ($self) = @_;
+
 	eval {
-		$query = CGI->new;
+		$self->_init_config();
 
-		_init_config();
+		$self->{'_client_ip'} = $self->_get_client_ip();
+		$self->{'_caller'} = $self->_get_caller();
 
-		my $client_ip = (_get_config('client_ip') ? $ENV{_get_config('client_ip')} : $ENV{'REMOTE_ADDR'});
-		my $caller = (_get_config('caller') ? $ENV{_get_config('caller')} : $ENV{'SCRIPT_FILENAME'});
-
-		my $connection = _init_connection(
-			(_get_config('host') || '127.0.0.1'),
-			(_get_config('port') || '9115'),
-			_get_config('ssl')
+		my $input = $self->remove_ignored(
+			$self->get_input(),
+			$self->get_config('ignore')
 		);
 
-		my $input = _remove_ignored(
-			_get_input(),
-			_get_config('ignore'),
-			$caller
+		$self->_init_connection(
+			($self->get_config('host') || '127.0.0.1'),
+			($self->get_config('port') || '9115'),
+			$self->get_config('ssl')
 		);
 
-		my $threats = _send_connection(
-			$connection,
-			_get_config('profile', CONFIG_REQUIRED),
-			_get_config('key', CONFIG_REQUIRED),
-			$input,
-			$client_ip,
-			$caller
+		my $threats = $self->send_input(
+			$self->get_config('profile', CONFIG_REQUIRED),
+			$self->get_config('key', CONFIG_REQUIRED),
+			$input
 		);
 
-		close $connection;
-
-		if (!_get_config('observe') && $threats) {
-			_defuse_input($threats);
+		if (!$self->get_config('observe') && $threats) {
+			$self->defuse_input($threats);
 		}
 	};
 
 	if ($@) {
-		if (!_get_config('observe')) {
-			print $query->header(-status => '500 Internal Server Error');
-			print '<h1>500 Internal Server Error</h1>';
-
-			if (_get_config('debug')) {
-				print $@;
+		if (!$self->get_config('observe')) {
+			if ($self->get_config('debug')) {
+				$self->_error($@);
+			} else {
+				$self->_error();
 			}
 
 			exit;
