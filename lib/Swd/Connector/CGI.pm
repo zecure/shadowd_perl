@@ -35,7 +35,7 @@ sub get_input {
 
 	my %input;
 
-	foreach my $key ($self->{'_query'}->para)) {
+	foreach my $key ($self->{'_query'}->param) {
 		my @value = $self->{'_query'}->param($key);
 
 		if ($#value > 0){
