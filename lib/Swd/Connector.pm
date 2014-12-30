@@ -200,13 +200,13 @@ sub start {
 	my ($self) = @_;
 
 	eval {
-		$self->_init_config();
+		$self->_init_config;
 
-		$self->{'_client_ip'} = $self->_get_client_ip();
-		$self->{'_caller'} = $self->_get_caller();
+		$self->{'_client_ip'} = $self->_get_client_ip;
+		$self->{'_caller'} = $self->_get_caller;
 
 		my $input = $self->remove_ignored(
-			$self->get_input(),
+			$self->get_input,
 			$self->get_config('ignore')
 		);
 
@@ -232,12 +232,14 @@ sub start {
 			if ($self->get_config('debug')) {
 				$self->_error($@);
 			} else {
-				$self->_error();
+				$self->_error;
 			}
 
-			exit;
+			return 0;
 		}
 	}
+
+	return 1;
 }
 
 1;

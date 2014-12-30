@@ -24,7 +24,7 @@ use CGI;
 sub new {
 	my ($class, $query) = @_;
 
-	my $self = $class->SUPER::new();
+	my $self = $class->SUPER::new;
 	$self->{'_query'} = $query;
 
 	return $self;
@@ -35,23 +35,23 @@ sub get_input {
 
 	my %input;
 
-	foreach my $key ($self->{'_query'}->param()) {
+	foreach my $key ($self->{'_query'}->para)) {
 		my @value = $self->{'_query'}->param($key);
 
 		if ($#value > 0){
 			for my $index (0 .. $#value) {
-				$input{$self->{'_query'}->request_method() . '|' . $self->escape_key($key) . '|' . $index} = $value[$index];
+				$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key) . '|' . $index} = $value[$index];
 			}
 		} else {
-			$input{$self->{'_query'}->request_method() . '|' . $self->escape_key($key)} = $value[0];
+			$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key)} = $value[0];
 		}
 	}
 
-	foreach my $key ($self->{'_query'}->cookie()) {
+	foreach my $key ($self->{'_query'}->cookie) {
 		$input{'COOKIE|' . $self->escape_key($key)} = $self->{'_query'}->cookie($key);
 	}
 
-	foreach my $key ($self->{'_query'}->http()) {
+	foreach my $key ($self->{'_query'}->http) {
 		$input{'SERVER|' . $self->escape_key($key)} = $self->{'_query'}->http($key);
 	}
 
@@ -63,7 +63,7 @@ sub defuse_input {
 
 	my %cookies;
 
-	foreach my $cookie ($self->{'_query'}->cookie()) {
+	foreach my $cookie ($self->{'_query'}->cookie) {
 		$cookies{$cookie} = $self->{'_query'}->cookie($cookie);
 	}
 
@@ -92,7 +92,7 @@ sub defuse_input {
 	}
 
 	# Save the changes for the CGI module.
-	$self->{'_query'}->save_request();
+	$self->{'_query'}->save_request;
 
 	# Overwrite the query string in the env in case that the target does not use CGI.
 	$ENV{'QUERY_STRING'} = $self->{'_query'}->query_string;
@@ -137,7 +137,10 @@ sub _error {
 
 BEGIN {
 	my $connector = Swd::Connector::CGI->new(CGI->new);
-	$connector->start();
+
+	if (!$connector->start) {
+		exit;
+	}
 }
 
 1;
