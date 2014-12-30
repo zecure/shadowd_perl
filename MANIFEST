@@ -2,3 +2,4 @@ Makefile.PL
 MANIFEST
 lib/Swd/Connector.pm
 lib/Swd/Connector/CGI.pm
+lib/Swd/Connector/Mojolicious.pm
