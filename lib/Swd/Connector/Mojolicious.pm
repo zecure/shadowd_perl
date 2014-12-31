@@ -23,7 +23,7 @@ use base 'Swd::Connector';
 sub new {
 	my ($class, $query) = @_;
 
-	my $self = $class->SUPER::new();
+	my $self = $class->SUPER::new;
 	$self->{'_query'} = $query;
 
 	return $self;
@@ -52,7 +52,24 @@ sub get_input {
 		$input{'SERVER|' . $self->escape_key($key)} = $headers->{$key};
 	}
 
-	# TODO: add cookie support
+	# Mojolicious supports cookie arrays. First we have to get all unique names.
+	my %cookies;
+
+	foreach my $cookie (@{$self->{'_query'}->req->cookies}) {
+		$cookies{$cookie->name} = 1;
+	}
+
+	foreach my $key (keys %cookies) {
+		my @value = $self->{'_query'}->cookie($key);
+
+		if ($#value > 0){
+			for my $index (0 .. $#value) {
+				$input{'COOKIE|' . $self->escape_key($key) . '|' . $index} = $value[$index];
+			}
+		} else {
+			$input{'COOKIE|' . $self->escape_key($key)} = $value[0];
+		}
+	}
 
 	return \%input;
 }

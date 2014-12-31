@@ -222,21 +222,21 @@ sub start {
 			$input
 		);
 
+		close $self->{'_connection'};
+
 		if (!$self->get_config('observe') && $threats) {
 			$self->defuse_input($threats);
 		}
 	};
 
-	if ($@) {
-		if (!$self->get_config('observe')) {
-			if ($self->get_config('debug')) {
-				$self->_error($@);
-			} else {
-				$self->_error;
-			}
-
-			return 0;
+	if ($@ && !$self->get_config('observe')) {
+		if ($self->get_config('debug')) {
+			$self->_error($@);
+		} else {
+			$self->_error;
 		}
+
+		return 0;
 	}
 
 	return 1;
