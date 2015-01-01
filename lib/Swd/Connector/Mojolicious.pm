@@ -26,6 +26,11 @@ sub new {
 	my $self = $class->SUPER::new;
 	$self->{'_query'} = $query;
 
+	# Mojolicious supports cookies with shared names, so first we have to get all unique names.
+	foreach my $cookie (@{$self->{'_query'}->req->cookies}) {
+		$self->{'_cookies'}->{$cookie->name} = 1;
+	}
+
 	return $self;
 }
 
@@ -35,14 +40,39 @@ sub get_input {
 	my %input;
 
 	foreach my $key ($self->{'_query'}->param) {
-		my @value = $self->{'_query'}->param($key);
+		my @values;
 
-		if ($#value > 0){
-			for my $index (0 .. $#value) {
-				$input{$self->{'_query'}->req->method . '|' . $self->escape_key($key) . '|' . $index} = $value[$index];
+		# Mojolicious 5 has separate methods to get input with the same name.
+		if ($self->{'_query'}->can('every_param')) {
+			@values = @{$self->{'_query'}->every_param($key)};
+		} else {
+			@values = $self->{'_query'}->param($key);
+		}
+
+		if ($#values > 0){
+			for my $index (0 .. $#values) {
+				$input{$self->{'_query'}->req->method . '|' . $self->escape_key($key) . '|' . $index} = $values[$index];
 			}
 		} else {
-			$input{$self->{'_query'}->req->method . '|' . $self->escape_key($key)} = $value[0];
+			$input{$self->{'_query'}->req->method . '|' . $self->escape_key($key)} = $values[0];
+		}
+	}
+
+	foreach my $key (keys %{$self->{'_cookies'}}) {
+		my @values;
+
+		if ($self->{'_query'}->can('every_cookie')) {
+			@values = @{$self->{'_query'}->every_cookie($key)};
+		} else {
+			@values = $self->{'_query'}->cookie($key);
+		}
+
+		if ($#values > 0){
+			for my $index (0 .. $#values) {
+				$input{'COOKIE|' . $self->escape_key($key) . '|' . $index} = $values[$index];
+			}
+		} else {
+			$input{'COOKIE|' . $self->escape_key($key)} = $values[0];
 		}
 	}
 
@@ -52,30 +82,25 @@ sub get_input {
 		$input{'SERVER|' . $self->escape_key($key)} = $headers->{$key};
 	}
 
-	# Mojolicious supports cookie arrays. First we have to get all unique names.
-	my %cookies;
-
-	foreach my $cookie (@{$self->{'_query'}->req->cookies}) {
-		$cookies{$cookie->name} = 1;
-	}
-
-	foreach my $key (keys %cookies) {
-		my @value = $self->{'_query'}->cookie($key);
-
-		if ($#value > 0){
-			for my $index (0 .. $#value) {
-				$input{'COOKIE|' . $self->escape_key($key) . '|' . $index} = $value[$index];
-			}
-		} else {
-			$input{'COOKIE|' . $self->escape_key($key)} = $value[0];
-		}
-	}
-
 	return \%input;
 }
 
 sub defuse_input {
 	my ($self, $threats) = @_;
+
+	my %cookies;
+
+	foreach my $key (keys %{$self->{'_cookies'}}) {
+		my @values;
+
+		if ($self->{'_query'}->can('every_cookie')) {
+			@values = @{$self->{'_query'}->every_cookie($key)};
+		} else {
+			@values = $self->{'_query'}->cookie($key);
+		}
+
+		$cookies{$key} = \@values;
+	}
 
 	foreach my $path (@{$threats}) {
 		my @path_split = split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
@@ -88,6 +113,14 @@ sub defuse_input {
 
 		if ($path_split[0] eq 'SERVER') {
 			$self->{'_query'}->req->headers->header($key, '');
+		} elsif ($path_split[0] eq 'COOKIE') {
+			if ($#path_split == 1) {
+				$cookies{$key} = [''];
+			} else {
+				my $array = $cookies{$key};
+				$array->[$path_split[2]] = '';
+				$cookies{$key} = $array;
+			}
 		} else {
 			if ($#path_split == 1) {
 				$self->{'_query'}->req->param($key, '');
@@ -97,8 +130,23 @@ sub defuse_input {
 				$self->{'_query'}->req->param($key, @array);
 			}
 		}
+	}
 
-		# TODO: add cookie support
+	if ($self->{'_query'}->req->headers->cookie) {
+		my $cookie_string = '';
+
+		# Cookie handling in Mojolicious is very strange. No encoding.
+		foreach my $key (keys %cookies) {
+			foreach my $value (@{$cookies{$key}}) {
+				$cookie_string .= $key . '=' . $value . ';';
+			}
+		}
+
+		# Remove last semicolon.
+		chop($cookie_string);
+
+		# Overwrite the cookie string.
+		$self->{'_query'}->req->headers->cookie($cookie_string);
 	}
 }
 

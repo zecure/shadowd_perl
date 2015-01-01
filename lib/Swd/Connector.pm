@@ -24,7 +24,6 @@ use Config::IniFiles;
 use IO::Socket;
 use IO::Socket::SSL;
 use Crypt::Mac::HMAC qw(hmac_hex);
-use URI::Encode qw(uri_encode);
 use Attribute::Abstract;
 
 use constant {

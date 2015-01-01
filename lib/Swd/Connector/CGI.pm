@@ -20,6 +20,7 @@ use strict;
 
 use base 'Swd::Connector';
 use CGI;
+use URI::Encode qw(uri_encode);
 
 sub new {
 	my ($class, $query) = @_;
@@ -36,14 +37,14 @@ sub get_input {
 	my %input;
 
 	foreach my $key ($self->{'_query'}->param) {
-		my @value = $self->{'_query'}->param($key);
+		my @values = $self->{'_query'}->param($key);
 
-		if ($#value > 0){
-			for my $index (0 .. $#value) {
-				$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key) . '|' . $index} = $value[$index];
+		if ($#values > 0){
+			for my $index (0 .. $#values) {
+				$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key) . '|' . $index} = $values[$index];
 			}
 		} else {
-			$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key)} = $value[0];
+			$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key)} = $values[0];
 		}
 	}
 
@@ -79,7 +80,7 @@ sub defuse_input {
 		if ($path_split[0] eq 'SERVER') {
 			$ENV{$key} = '';
 		} elsif ($path_split[0] eq 'COOKIE') {
-			delete $cookies{$key};
+			$cookies{$key} = '';
 		} else {
 			if ($#path_split == 1) {
 				$self->{'_query'}->param($key, '');
@@ -100,8 +101,8 @@ sub defuse_input {
 	if (defined $ENV{'HTTP_COOKIE'}) {
 		my $cookie_string = '';
 
-		foreach my $cookie (keys %cookies) {
-			$cookie_string .= uri_encode($cookie) . '=' . uri_encode($cookies{$cookie}) . ';';
+		foreach my $key (keys %cookies) {
+			$cookie_string .= uri_encode($key) . '=' . uri_encode($cookies{$key}) . ';';
 		}
 
 		# Remove last semicolon.
