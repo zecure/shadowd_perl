@@ -125,9 +125,16 @@ sub defuse_input {
 			if ($#path_split == 1) {
 				$self->{'_query'}->req->param($key, '');
 			} else {
-				my @array = $self->{'_query'}->req->param($key);
-				$array[$path_split[2]] = '';
-				$self->{'_query'}->req->param($key, @array);
+				my @values;
+
+				if ($self->{'_query'}->can('every_param')) {
+					@values = @{$self->{'_query'}->every_param($key)};
+				} else {
+					@values = $self->{'_query'}->param($key);
+				}
+
+				$values[$path_split[2]] = '';
+				$self->{'_query'}->req->param($key, @values);
 			}
 		}
 	}

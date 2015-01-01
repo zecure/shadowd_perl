@@ -85,9 +85,9 @@ sub defuse_input {
 			if ($#path_split == 1) {
 				$self->{'_query'}->param($key, '');
 			} else {
-				my @array = $self->{'_query'}->param($key);
-				$array[$path_split[2]] = '';
-				$self->{'_query'}->param($key, @array);
+				my @values = $self->{'_query'}->param($key);
+				$values[$path_split[2]] = '';
+				$self->{'_query'}->param($key, @values);
 			}
 		}
 	}
