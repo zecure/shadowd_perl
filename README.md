@@ -16,6 +16,8 @@ It is also possible to clone this repository and install the modules manually:
     make
     make install
 
+You also have to create a configuration file. You can copy *misc/examples/connectors.ini* to */etc/shadowd/connectors.ini*. The example configuration is annotated and should be self-explanatory.
+
 ## CGI
 To protect CGI applications you simply have to load the module:
 
