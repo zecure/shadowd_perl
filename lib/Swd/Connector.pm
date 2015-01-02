@@ -235,7 +235,7 @@ sub start {
 			$self->_error;
 		}
 
-		return 0;
+		return undef;
 	}
 
 	return 1;
