@@ -195,12 +195,21 @@ sub send_input {
 	}
 }
 
+sub _log {
+	my ($self, $message) = @_;
+
+	open my $handler, '>>' . $self->{'_log'} or die('could not open log file: ' . $!);
+	print $handler $message;
+	close $handler;
+}
+
 sub start {
 	my ($self) = @_;
 
 	eval {
 		$self->_init_config;
 
+		$self->{'_log'} = ($self->get_config('log') || '/var/log/shadowd.log');
 		$self->{'_client_ip'} = $self->_get_client_ip;
 		$self->{'_caller'} = $self->_get_caller;
 
@@ -226,14 +235,18 @@ sub start {
 		if (!$self->get_config('observe') && $threats) {
 			$self->defuse_input($threats);
 		}
+
+		if ($self->get_config('debug') && $threats) {
+			$self->_log('shadowd: removed threat from client: ' . $self->{'_client_ip'} . "\n");
+		}
 	};
 
 	if ($@ && !$self->get_config('observe')) {
 		if ($self->get_config('debug')) {
-			$self->_error($@);
-		} else {
-			$self->_error;
+			$self->_log($@);
 		}
+
+		$self->_error;
 
 		return undef;
 	}

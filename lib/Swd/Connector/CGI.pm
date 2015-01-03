@@ -126,14 +126,10 @@ sub _get_caller {
 }
 
 sub _error {
-	my ($self, $message) = @_;
+	my ($self) = @_;
 
 	print $self->{'_query'}->header(-status => '500 Internal Server Error');
 	print '<h1>500 Internal Server Error</h1>';
-
-	if ($message) {
-		print $message;
-	}
 }
 
 BEGIN {

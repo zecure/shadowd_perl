@@ -170,15 +170,9 @@ sub _get_caller {
 }
 
 sub _error {
-	my ($self, $message) = @_;
+	my ($self) = @_;
 
-	my $body = '<h1>500 Internal Server Error</h1>';
-
-	if ($message) {
-		$body .= $message;
-	}
-
-	$self->{'_query'}->render(data => $body, status => 500);
+	$self->{'_query'}->render(data => '<h1>500 Internal Server Error</h1>', status => 500);
 }
 
 1;
