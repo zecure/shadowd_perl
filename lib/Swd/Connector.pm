@@ -46,15 +46,7 @@ sub defuse_input: Abstract;
 
 sub new {
 	my ($class) = @_;
-
-	my $self = {
-		'_config'         => undef,
-		'_config_file'    => undef,
-		'_config_section' => undef,
-		'_connection'     => undef,
-		'_client_ip'      => undef,
-		'_caller'         => undef
-	};
+	my $self = {};
 
 	bless $self, $class;
 	return $self;
@@ -142,22 +134,27 @@ sub remove_ignored {
 		return $input;
 	}
 
+	local $/ = undef;
 	open my $handler, $file or die('could not open ignore file: ' . $!);
+	binmode $handler;
 
-	while (my $line = <$handler>) {
-		chomp($line);
+	my $content = <$handler>;
+	my $json = decode_json($content);
 
-		if ($line =~ /(.+?)(\s+)(.+)/) {
-			if ($3 ne $self->{'_caller'}) {
-				next;
-			}
-
-			if (defined $input->{$1}) {
-				delete $input->{$1};
+	foreach my $entry (@$json) {
+		if (!defined $entry->{'path'} && defined $entry->{'caller'}) {
+			if ($self->{'_caller'} eq $entry->{'caller'}) {
+				return [];
 			}
 		} else {
-			if (defined $input->{$line}) {
-				delete $input->{$line};
+			if (defined $entry->{'caller'}) {
+				if ($self->{'_caller'} ne $entry->{'caller'}) {
+					next;
+				}
+			}
+
+			if (defined $entry->{'path'}) {
+				delete $input->{$entry->{'path'}};
 			}
 		}
 	}
