@@ -1,5 +1,5 @@
 Makefile.PL
 MANIFEST
-lib/Swd/Connector.pm
-lib/Swd/Connector/CGI.pm
-lib/Swd/Connector/Mojolicious.pm
+lib/Shadowd/Connector.pm
+lib/Shadowd/Connector/CGI.pm
+lib/Shadowd/Connector/Mojolicious.pm
