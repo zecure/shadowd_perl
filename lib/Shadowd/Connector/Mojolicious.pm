@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Swd::Connector::Mojolicious 0.01;
+package Shadowd::Connector::Mojolicious 0.01;
 
 use strict;
 
-use base 'Swd::Connector';
+use base 'Shadowd::Connector';
 
 sub new {
 	my ($class, $query) = @_;

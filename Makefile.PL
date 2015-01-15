@@ -29,12 +29,13 @@ my %prereq = (
 	'IO::Socket::SSL'     => 0,
 	'Crypt::Mac::HMAC'    => 0,
 	'URI::Encode'         => 0,
-	'Attribute::Abstract' => 0
+	'Attribute::Abstract' => 0,
+	'POSIX'               => 0
 );
 
 WriteMakefile(
-	NAME         => 'Swd::Connector',
-	VERSION_FROM => 'lib/Swd/Connector.pm',
+	NAME         => 'Shadowd::Connector',
+	VERSION_FROM => 'lib/Shadowd/Connector.pm',
 	PREREQ_PM    => \%prereq,
 	AUTHOR       => 'Hendrik Buchwald <hb@zecure.org>',
 	ABSTRACT     => 'Perl connector for the Shadow Daemon web application firewall',

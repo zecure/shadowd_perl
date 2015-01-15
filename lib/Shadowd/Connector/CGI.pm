@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package Swd::Connector::CGI 1.00;
+package Shadowd::Connector::CGI 1.00;
 
 use strict;
 
-use base 'Swd::Connector';
+use base 'Shadowd::Connector';
 
 use CGI;
 use URI::Encode qw(uri_encode);
@@ -133,7 +133,7 @@ sub error {
 }
 
 BEGIN {
-	my $connector = Swd::Connector::CGI->new(CGI->new);
+	my $connector = Shadowd::Connector::CGI->new(CGI->new);
 
 	if (!$connector->start) {
 		exit;

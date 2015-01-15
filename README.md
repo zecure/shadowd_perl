@@ -8,7 +8,7 @@ For the full documentation please refer to [shadowd.zecure.org](https://shadowd.
 # Installation
 You can install the modules with CPAN:
 
-    cpan -i Swd::Connector
+    cpan -i Shadowd::Connector
 
 It is also possible to clone this repository and install the modules manually:
 
@@ -21,23 +21,23 @@ You also have to create a configuration file. You can copy *misc/examples/connec
 ## CGI
 To protect CGI applications you simply have to load the module:
 
-    use Swd::Connector::CGI;
+    use Shadowd::Connector::CGI;
 
 This can be automated by executing Perl scripts with:
 
-    perl -mSwd::Connector::CGI
+    perl -mShadowd::Connector::CGI
 
 ## Mojolicious
 Mojolicious applications require a small modification. It is necessary to create a hook to intercept requests:
 
-    use Swd::Connector::Mojolicious;
+    use Shadowd::Connector::Mojolicious;
     
     sub startup {
       my $app = shift;
     
       $app->hook(before_dispatch => sub {
         my $self = shift;
-        return Swd::Connector::Mojolicious->new($self)->start();
+        return Shadowd::Connector::Mojolicious->new($self)->start();
       });
 
       # ...
@@ -46,11 +46,11 @@ Mojolicious applications require a small modification. It is necessary to create
 ## Mojolicious::Lite
 Mojolicious::Lite applications require a small change as well:
 
-    use Swd::Connector::Mojolicious;
+    use Shadowd::Connector::Mojolicious;
     
     under sub {
       my $self = shift;
-      return Swd::Connector::Mojolicious->new($self)->start();
+      return Shadowd::Connector::Mojolicious->new($self)->start();
     };
 
 The connector is only executed if the request matches a route.
