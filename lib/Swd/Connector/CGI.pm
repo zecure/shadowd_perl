@@ -1,6 +1,6 @@
 # Shadow Daemon -- Web Application Firewall
 #
-#   Copyright (C) 2014 Hendrik Buchwald <hb@zecure.org>
+#   Copyright (C) 2014-2015 Hendrik Buchwald <hb@zecure.org>
 #
 # This file is part of Shadow Daemon. Shadow Daemon is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
@@ -19,6 +19,7 @@ package Swd::Connector::CGI 1.00;
 use strict;
 
 use base 'Swd::Connector';
+
 use CGI;
 use URI::Encode qw(uri_encode);
 
@@ -31,32 +32,31 @@ sub new {
 	return $self;
 }
 
-sub get_input {
+sub gather_input {
 	my ($self) = @_;
 
-	my %input;
+	$self->{'_input'} = {};
 
 	foreach my $key ($self->{'_query'}->param) {
+		my $path = $self->{'_query'}->request_method . '|' . $self->escape_key($key);
 		my @values = $self->{'_query'}->param($key);
 
 		if ($#values > 0){
 			for my $index (0 .. $#values) {
-				$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key) . '|' . $index} = $values[$index];
+				$self->{'_input'}->{$path . '|' . $index} = $values[$index];
 			}
 		} else {
-			$input{$self->{'_query'}->request_method . '|' . $self->escape_key($key)} = $values[0];
+			$self->{'_input'}->{$path} = $values[0];
 		}
 	}
 
 	foreach my $key ($self->{'_query'}->cookie) {
-		$input{'COOKIE|' . $self->escape_key($key)} = $self->{'_query'}->cookie($key);
+		$self->{'_input'}->{'COOKIE|' . $self->escape_key($key)} = $self->{'_query'}->cookie($key);
 	}
 
 	foreach my $key ($self->{'_query'}->http) {
-		$input{'SERVER|' . $self->escape_key($key)} = $self->{'_query'}->http($key);
+		$self->{'_input'}->{'SERVER|' . $self->escape_key($key)} = $self->{'_query'}->http($key);
 	}
-
-	return \%input;
 }
 
 sub defuse_input {
@@ -69,7 +69,7 @@ sub defuse_input {
 	}
 
 	foreach my $path (@{$threats}) {
-		my @path_split = split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
+		my @path_split = $self->split_path($path);
 
 		if ($#path_split < 1) {
 			next;
@@ -113,19 +113,19 @@ sub defuse_input {
 	}
 }
 
-sub _get_client_ip {
+sub get_client_ip {
 	my ($self) = @_;
 
-	return ($self->get_config('client_ip') ? $ENV{$self->get_config('client_ip')} : $ENV{'REMOTE_ADDR'});
+	return $ENV{$self->get_config('client_ip', 0, 'REMOTE_ADDR')};
 }
 
-sub _get_caller {
+sub get_caller {
 	my ($self) = @_;
 
-	return ($self->get_config('caller') ? $ENV{$self->get_config('caller')} : $ENV{'SCRIPT_FILENAME'});
+	return $ENV{$self->get_config('caller', 0, 'SCRIPT_FILENAME')};
 }
 
-sub _error {
+sub error {
 	my ($self) = @_;
 
 	print $self->{'_query'}->header(-status => '500 Internal Server Error');
