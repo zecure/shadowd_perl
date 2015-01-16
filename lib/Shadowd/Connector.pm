@@ -1,20 +1,4 @@
-# Shadow Daemon -- Web Application Firewall
-#
-#   Copyright (C) 2014-2015 Hendrik Buchwald <hb@zecure.org>
-#
-# This file is part of Shadow Daemon. Shadow Daemon is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-package Shadowd::Connector 1.00;
+package Shadowd::Connector;
 
 use strict;
 
@@ -38,11 +22,29 @@ use constant {
 	STATUS_ATTACK                    => 5
 };
 
-sub get_client_ip: Abstract;
-sub get_caller: Abstract;
-sub gather_input: Abstract;
-sub defuse_input: Abstract;
-sub error: Abstract;
+=head1 NAME
+
+Shadowd::Connector - Shadow Daemon connector base
+
+=head1 VERSION
+
+Version 1.00
+
+=cut
+
+our $VERSION = '1.00';
+
+=head1 SYNOPSIS
+
+Quick summary of what the module does.
+
+=cut
+
+=head1 SUBROUTINES/METHODS
+
+=head2 new
+
+=cut
 
 sub new {
 	my ($class) = @_;
@@ -51,6 +53,40 @@ sub new {
 	bless $self, $class;
 	return $self;
 }
+
+=head2 get_client_ip
+
+=cut
+
+sub get_client_ip: Abstract;
+
+=head2 get_caller
+
+=cut
+
+sub get_caller: Abstract;
+
+=head2 gather_input
+
+=cut
+
+sub gather_input: Abstract;
+
+=head2 defuse_input
+
+=cut
+
+sub defuse_input: Abstract;
+
+=head2 error
+
+=cut
+
+sub error: Abstract;
+
+=head2 init_config
+
+=cut
 
 sub init_config {
 	my ($self) = @_;
@@ -74,6 +110,10 @@ sub init_config {
 	}
 }
 
+=head2 get_config
+
+=cut
+
 sub get_config {
 	my ($self, $key, $required, $default) = @_;
 
@@ -88,11 +128,19 @@ sub get_config {
 	}
 }
 
+=head2 get_input
+
+=cut
+
 sub get_input {
 	my ($self) = @_;
 
 	return $self->{'_input'}
 }
+
+=head2 remove_ignored
+
+=cut
 
 sub remove_ignored {
 	my ($self, $file) = @_;
@@ -126,6 +174,10 @@ sub remove_ignored {
 
 	close $handler;
 }
+
+=head2 send_input
+
+=cut
 
 sub send_input {
 	my ($self, $host, $port, $profile, $key, $ssl) = @_;
@@ -165,6 +217,10 @@ sub send_input {
 	return $self->parse_output($output);
 }
 
+=head2 parse_output
+
+=cut
+
 sub parse_output {
 	my ($self, $output) = @_;
 
@@ -180,11 +236,19 @@ sub parse_output {
 	}
 }
 
+=head2 sign
+
+=cut
+
 sub sign {
 	my ($self, $key, $json) = @_;
 
 	return hmac_hex('SHA256', $key, $json);
 }
+
+=head2 log
+
+=cut
 
 sub log {
 	my ($self, $message) = @_;
@@ -198,6 +262,10 @@ sub log {
 	close $handler;
 }
 
+=head2 escape_key
+
+=cut
+
 sub escape_key {
 	my ($self, $key) = @_;
 
@@ -206,6 +274,10 @@ sub escape_key {
 
 	return $key;
 }
+
+=head2 unescape_key
+
+=cut
 
 sub unescape_key {
 	my ($self, $key) = @_;
@@ -216,11 +288,19 @@ sub unescape_key {
 	return $key;
 }
 
+=head2 split_path
+
+=cut
+
 sub split_path {
 	my ($self, $path) = @_;
 
 	return split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
 }
+
+=head2 start
+
+=cut
 
 sub start {
 	my ($self) = @_;
@@ -267,4 +347,63 @@ sub start {
 	return 1;
 }
 
-1;
+=head1 AUTHOR
+
+Hendrik Buchwald, C<< <hb at zecure.org> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to L<https://github.com/zecure/shadowd_perl/issues>, C<bug-shadowd-connector at rt.cpan.org>,
+or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll
+automatically be notified of progress on your bug as I make changes.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Shadowd::Connector
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Shadowd-Connector>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Shadowd-Connector>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Shadowd-Connector>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Shadowd-Connector/>
+
+=back
+
+=head1 LICENSE AND COPYRIGHT
+
+Shadow Daemon -- Web Application Firewall
+
+  Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb at zecure.org> >>
+
+This file is part of Shadow Daemon. Shadow Daemon is free software: you can
+redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, version 2.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see L<http://www.gnu.org/licenses/>.
+
+=cut
+
+1; # End of Shadowd::Connector

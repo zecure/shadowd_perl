@@ -1,9 +1,9 @@
 ---
-abstract: 'Perl connector for the Shadow Daemon web application firewall'
+abstract: 'Shadow Daemon connector base'
 author:
   - 'Hendrik Buchwald <hb@zecure.org>'
 build_requires:
-  ExtUtils::MakeMaker: 0
+  Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 0

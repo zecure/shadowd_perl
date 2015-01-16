@@ -1,20 +1,4 @@
-# Shadow Daemon -- Web Application Firewall
-#
-#   Copyright (C) 2014-2015 Hendrik Buchwald <hb@zecure.org>
-#
-# This file is part of Shadow Daemon. Shadow Daemon is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-package Shadowd::Connector::CGI 1.00;
+package Shadowd::Connector::CGI;
 
 use strict;
 
@@ -22,6 +6,30 @@ use base 'Shadowd::Connector';
 
 use CGI;
 use URI::Encode qw(uri_encode);
+
+=head1 NAME
+
+Shadowd::Connector::CGI - Shadow Daemon connector for CGI applications
+
+=head1 VERSION
+
+Version 1.00
+
+=cut
+
+our $VERSION = '1.00';
+
+=head1 SYNOPSIS
+
+Quick summary of what the module does.
+
+=cut
+
+=head1 SUBROUTINES/METHODS
+
+=head2 new
+
+=cut
 
 sub new {
 	my ($class, $query) = @_;
@@ -31,6 +39,10 @@ sub new {
 
 	return $self;
 }
+
+=head2 gather_input
+
+=cut
 
 sub gather_input {
 	my ($self) = @_;
@@ -58,6 +70,10 @@ sub gather_input {
 		$self->{'_input'}->{'SERVER|' . $self->escape_key($key)} = $self->{'_query'}->http($key);
 	}
 }
+
+=head2 defuse_input
+
+=cut
 
 sub defuse_input {
 	my ($self, $threats) = @_;
@@ -113,17 +129,29 @@ sub defuse_input {
 	}
 }
 
+=head2 get_client_ip
+
+=cut
+
 sub get_client_ip {
 	my ($self) = @_;
 
 	return $ENV{$self->get_config('client_ip', 0, 'REMOTE_ADDR')};
 }
 
+=head2 get_caller
+
+=cut
+
 sub get_caller {
 	my ($self) = @_;
 
 	return $ENV{$self->get_config('caller', 0, 'SCRIPT_FILENAME')};
 }
+
+=head2 error
+
+=cut
 
 sub error {
 	my ($self) = @_;

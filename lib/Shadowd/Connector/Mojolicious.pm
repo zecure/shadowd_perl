@@ -1,24 +1,32 @@
-# Shadow Daemon -- Web Application Firewall
-#
-#   Copyright (C) 2014-2015 Hendrik Buchwald <hb@zecure.org>
-#
-# This file is part of Shadow Daemon. Shadow Daemon is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-package Shadowd::Connector::Mojolicious 0.01;
+package Shadowd::Connector::Mojolicious;
 
 use strict;
 
 use base 'Shadowd::Connector';
+
+=head1 NAME
+
+Shadowd::Connector::Mojolicious - Shadow Daemon connector for Mojolicious applications
+
+=head1 VERSION
+
+Version 1.00
+
+=cut
+
+our $VERSION = '1.00';
+
+=head1 SYNOPSIS
+
+Quick summary of what the module does.
+
+=cut
+
+=head1 SUBROUTINES/METHODS
+
+=head2 new
+
+=cut
 
 sub new {
 	my ($class, $query) = @_;
@@ -33,6 +41,10 @@ sub new {
 
 	return $self;
 }
+
+=head2 gather_input
+
+=cut
 
 sub gather_input {
 	my ($self) = @_;
@@ -83,6 +95,10 @@ sub gather_input {
 		$self->{'_input'}->{'SERVER|' . $self->escape_key($key)} = $headers->{$key};
 	}
 }
+
+=head2 defuse_input
+
+=cut
 
 sub defuse_input {
 	my ($self, $threats) = @_;
@@ -156,17 +172,29 @@ sub defuse_input {
 	}
 }
 
+=head2 get_client_ip
+
+=cut
+
 sub get_client_ip {
 	my ($self) = @_;
 
 	return $self->{'_query'}->tx->remote_address;
 }
 
+=head2 get_caller
+
+=cut
+
 sub get_caller {
 	my ($self) = @_;
 
 	return $self->{'_query'}->req->url->path->to_string;
 }
+
+=head2 error
+
+=cut
 
 sub error {
 	my ($self) = @_;
