@@ -17,7 +17,8 @@ Version 1.0.1
 our $VERSION = '1.0.1';
 
 =head1 SYNOPSIS
-B<Shadow Daemon> is a collection of tools to B<detect>, B<protocol> and B<prevent> B<attacks> on I<web applications>.
+
+B<Shadow Daemon> is a collection of tools to I<detect>, I<protocol> and I<prevent> I<attacks> on I<web applications>.
 Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
 It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
