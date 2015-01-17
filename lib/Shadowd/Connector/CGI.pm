@@ -9,28 +9,32 @@ use URI::Encode qw(uri_encode);
 
 =head1 NAME
 
-Shadowd::Connector::CGI - Shadow Daemon connector for CGI applications
+Shadowd::Connector::CGI - Shadow Daemon CGI Connector
 
 =head1 VERSION
 
-Version 1.0.0
+Version 1.0.1
 
 =cut
 
-our $VERSION = '1.0.0';
+our $VERSION = '1.0.1';
 
 =head1 SYNOPSIS
 
-Shadowd::Connector::CGI is the Shadow Daemon connector for Perl CGI applications. The module operates fully
-automatic and only has to be loaded to start its task.
+B<Shadow Daemon> is a collection of tools to B<detect>, B<protocol> and B<prevent> B<attacks> on I<web applications>.
+Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
+It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
+
+I<Shadowd::Connector::CGI> is the Shadow Daemon connector for Perl CGI applications. The module operates fully automatic and only has
+to be loaded/used to start its task.
 
 =cut
 
-=head1 SUBROUTINES/METHODS
+=head1 METHODS
 
-=head2 new
+=head2 new($query)
 
-Construct an object of the class and save a CGI object as an attribute.
+This method is a simple constructor for an object oriented interface. It requires a CGI object as parameter.
 
 =cut
 
@@ -43,9 +47,34 @@ sub new {
 	return $self;
 }
 
-=head2 gather_input
+=head2 get_client_ip()
 
-Gather the user input from the environment that is parsed by the CGI module.
+This method returns the IP address of the client from the environment. The default key is I<REMOTE_ADDR>, but if you are using a
+reverse proxy you have to change the key via the configuration file.
+
+=cut
+
+sub get_client_ip {
+	my ($self) = @_;
+
+	return $ENV{$self->get_config('client_ip', 0, 'REMOTE_ADDR')};
+}
+
+=head2 get_caller()
+
+This method returns the caller from the environment. The default key is I<SCRIPT_FILENAME>, i.e. the executed Perl script.
+
+=cut
+
+sub get_caller {
+	my ($self) = @_;
+
+	return $ENV{$self->get_config('caller', 0, 'SCRIPT_FILENAME')};
+}
+
+=head2 gather_input()
+
+This method gathers the user input with the help of the CGI module. The CGI module gets the user input from the environment.
 
 =cut
 
@@ -76,9 +105,9 @@ sub gather_input {
 	}
 }
 
-=head2 defuse_input
+=head2 defuse_input($threats)
 
-Defuse dangerous input by overwriting the environment of the script.
+This method defuses dangerous input by overwriting the environment of the script.
 
 =cut
 
@@ -136,33 +165,9 @@ sub defuse_input {
 	}
 }
 
-=head2 get_client_ip
+=head2 error()
 
-Get the ip address of the client from the environment.
-
-=cut
-
-sub get_client_ip {
-	my ($self) = @_;
-
-	return $ENV{$self->get_config('client_ip', 0, 'REMOTE_ADDR')};
-}
-
-=head2 get_caller
-
-Get the caller from the environment.
-
-=cut
-
-sub get_caller {
-	my ($self) = @_;
-
-	return $ENV{$self->get_config('caller', 0, 'SCRIPT_FILENAME')};
-}
-
-=head2 error
-
-Print an error message.
+This method simply prints an error message.
 
 =cut
 
@@ -183,11 +188,11 @@ BEGIN {
 
 =head1 AUTHOR
 
-Hendrik Buchwald, C<< <hb at zecure.org> >>
+Hendrik Buchwald, C<< <hb@zecure.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-shadowd-connector at rt.cpan.org>, or through the web interface at
+Please report any bugs or feature requests to C<bug-shadowd-connector@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll automatically
 be notified of progress on your bug as I make changes.
 
@@ -226,7 +231,7 @@ L<http://search.cpan.org/dist/Shadowd-Connector/>
 
 Shadow Daemon -- Web Application Firewall
 
-  Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb at zecure.org> >>
+Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb@zecure.org> >>
 
 This file is part of Shadow Daemon. Shadow Daemon is free software: you can
 redistribute it and/or modify it under the terms of the GNU General Public

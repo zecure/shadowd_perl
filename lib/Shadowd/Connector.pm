@@ -12,9 +12,10 @@ use Attribute::Abstract;
 use POSIX qw(strftime);
 
 use constant {
-	SHADOWD_CONNECTOR_VERSION        => '1.0.0-perl',
+	SHADOWD_CONNECTOR_VERSION        => '1.0.1-perl',
 	SHADOWD_CONNECTOR_CONFIG         => '/etc/shadowd/connectors.ini',
 	SHADOWD_CONNECTOR_CONFIG_SECTION => 'shadowd_perl',
+	SHADOWD_LOG                      => '/var/log/shadowd.log',
 	STATUS_OK                        => 1,
 	STATUS_BAD_REQUEST               => 2,
 	STATUS_BAD_SIGNATURE             => 3,
@@ -24,28 +25,32 @@ use constant {
 
 =head1 NAME
 
-Shadowd::Connector - Shadow Daemon connector base
+Shadowd::Connector - Shadow Daemon Connector (Base)
 
 =head1 VERSION
 
-Version 1.0.0
+Version 1.0.1
 
 =cut
 
-our $VERSION = '1.0.0';
+our $VERSION = '1.0.1';
 
 =head1 SYNOPSIS
 
-Shadowd::Connector is the base class to connect applications to the Shadow Daemon background server. It is not possible
-to use this module directly, because there are abstract methods that have to be overwritten.
+B<Shadow Daemon> is a collection of tools to B<detect>, B<protocol> and B<prevent> B<attacks> on I<web applications>.
+Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
+It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
+
+B<Shadowd::Connector> is the base class to connect Perl applications with the Shadow Daemon background server. It is not possible
+to use this module directly, because there are abstract methods that have to be implemented.
 
 =cut
 
-=head1 SUBROUTINES/METHODS
+=head1 METHODS
 
-=head2 new
+=head2 new()
 
-Simple constructor for an object oriented interface.
+This method is a simple constructor for an object oriented interface.
 
 =cut
 
@@ -57,49 +62,49 @@ sub new {
 	return $self;
 }
 
-=head2 get_client_ip
+=head2 get_client_ip()
 
-Abstract method that has to return the IP address of the client.
+This is an abstract method that has to be implemented by a subclass. It has to return the IP address of the client.
 
 =cut
 
 sub get_client_ip: Abstract;
 
-=head2 get_caller
+=head2 get_caller()
 
-Abstract method that has to return the caller, i.e. the requested resource.
+This is an abstract method that has to be implemented by a subclass. It has to return the caller, i.e. the requested resource.
 
 =cut
 
 sub get_caller: Abstract;
 
-=head2 gather_input
+=head2 gather_input()
 
-Abstract method that has to save the user input in the class attribute I<_input> (hash).
+This is an abstract method that has to be implemented by a subclass. It has to save the user input in the class attribute I<_input>.
 
 =cut
 
 sub gather_input: Abstract;
 
-=head2 defuse_input
+=head2 defuse_input($threats)
 
-Abstract method that has to remove elements from the first parameter (array) from the user input.
+This is an abstract method that has to be implemented by a subclass. It has to remove threats from the user input.
 
 =cut
 
 sub defuse_input: Abstract;
 
-=head2 error
+=head2 error()
 
-Abstract method that has to display a I<500> error.
+This is an abstract method that has to be implemented by a subclass. It has to display an error message.
 
 =cut
 
 sub error: Abstract;
 
-=head2 init_config
+=head2 init_config()
 
-Initialize the configuration.
+This method initializes and loads the configuration.
 
 =cut
 
@@ -125,9 +130,9 @@ sub init_config {
 	}
 }
 
-=head2 get_config
+=head2 get_config($key, $required, $default)
 
-Get values from the configuration file.
+This method returns values from the configuration.
 
 =cut
 
@@ -145,9 +150,9 @@ sub get_config {
 	}
 }
 
-=head2 get_input
+=head2 get_input()
 
-Get the user input that is compiled by I<gather_input>.
+This method returns the user input that is brought together by I<gather_input>.
 
 =cut
 
@@ -157,9 +162,9 @@ sub get_input {
 	return $self->{'_input'}
 }
 
-=head2 remove_ignored
+=head2 remove_ignored($file)
 
-Remove user input that should be ignored from the class attribute I<_input>.
+The method removes user input that should be ignored from the class attribute I<_input>.
 
 =cut
 
@@ -196,9 +201,9 @@ sub remove_ignored {
 	close $handler;
 }
 
-=head2 send_input
+=head2 send_input($host, $port, $profile, $key, $ssl)
 
-Send the user input and other data to the background server and return the parsed response.
+This method sends the user input to the background server and return the parsed response.
 
 =cut
 
@@ -240,9 +245,9 @@ sub send_input {
 	return $self->parse_output($output);
 }
 
-=head2 parse_output
+=head2 parse_output($output)
 
-Parse the response of the background server.
+This method parses the response of the background server.
 
 =cut
 
@@ -261,9 +266,9 @@ sub parse_output {
 	}
 }
 
-=head2 sign
+=head2 sign($key, $json)
 
-Sign the input with a secret key to authenticate requests without having to send the password.
+This method signs the input with a secret key to authenticate requests without having to send the password.
 
 =cut
 
@@ -273,16 +278,16 @@ sub sign {
 	return hmac_hex('SHA256', $key, $json);
 }
 
-=head2 log
+=head2 log($message)
 
-Log the message to a file.
+This method writes messages to a log file.
 
 =cut
 
 sub log {
 	my ($self, $message) = @_;
 
-	my $file = $self->get_config('log', 0, '/var/log/shadowd.log');
+	my $file = $self->get_config('log', 0, SHADOWD_LOG);
 	open my $handler, '>>' . $file or die('could not open log file: ' . $!);
 
 	my $datetime = strftime('%Y-%m-%d %H:%M:%S', localtime);
@@ -291,9 +296,9 @@ sub log {
 	close $handler;
 }
 
-=head2 escape_key
+=head2 escape_key($key)
 
-Escape keys, i.e. single elements of a path.
+This method escapes keys, i.e. single elements of a path.
 
 =cut
 
@@ -306,9 +311,9 @@ sub escape_key {
 	return $key;
 }
 
-=head2 unescape_key
+=head2 unescape_key($key)
 
-Unescape keys, i.e. single elements of a path.
+This method unescapes keys, i.e. single elements of a path.
 
 =cut
 
@@ -321,9 +326,9 @@ sub unescape_key {
 	return $key;
 }
 
-=head2 split_path
+=head2 split_path($path)
 
-Split a path into keys.
+This method splits a path into keys.
 
 =cut
 
@@ -333,9 +338,9 @@ sub split_path {
 	return split(/\\.(*SKIP)(*FAIL)|\|/s, $path);
 }
 
-=head2 start
+=head2 start()
 
-Connect the different components of the module to gather input, send it to the server and defuse threats.
+This method connects the different components of the module and starts the complete protection process.
 
 =cut
 
@@ -386,11 +391,11 @@ sub start {
 
 =head1 AUTHOR
 
-Hendrik Buchwald, C<< <hb at zecure.org> >>
+Hendrik Buchwald, C<< <hb@zecure.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-shadowd-connector at rt.cpan.org>, or through the web interface at
+Please report any bugs or feature requests to C<bug-shadowd-connector@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll automatically
 be notified of progress on your bug as I make changes.
 
@@ -429,7 +434,7 @@ L<http://search.cpan.org/dist/Shadowd-Connector/>
 
 Shadow Daemon -- Web Application Firewall
 
-  Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb at zecure.org> >>
+Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb@zecure.org> >>
 
 This file is part of Shadow Daemon. Shadow Daemon is free software: you can
 redistribute it and/or modify it under the terms of the GNU General Public

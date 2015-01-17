@@ -6,23 +6,28 @@ use base 'Shadowd::Connector';
 
 =head1 NAME
 
-Shadowd::Connector::Mojolicious - Shadow Daemon connector for Mojolicious applications
+Shadowd::Connector::Mojolicious - Shadow Daemon Mojolicious Connector
 
 =head1 VERSION
 
-Version 1.0.0
+Version 1.0.1
 
 =cut
 
-our $VERSION = '1.0.0';
+our $VERSION = '1.0.1';
 
 =head1 SYNOPSIS
+B<Shadow Daemon> is a collection of tools to B<detect>, B<protocol> and B<prevent> B<attacks> on I<web applications>.
+Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
+It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
-Shadowd::Connector::Mojolicious is the Shadow Daemon connector for Perl Mojolicious applications. To use this module you
+I<Shadowd::Connector::Mojolicious> is the Shadow Daemon connector for Perl Mojolicious applications. To use this module you
 have to create a hook that is executed on every request and pass the Mojolicious controller object to the constructor.
 
 =head2 Mojolicious
 
+    use Shadowd::Connector::Mojolicious;
+    
     sub startup {
       my $app = shift;
     
@@ -36,6 +41,8 @@ have to create a hook that is executed on every request and pass the Mojolicious
 
 =head2 Mojolicious::Lite
 
+    use Shadowd::Connector::Mojolicious;
+    
     under sub {
       my $self = shift;
       return Shadowd::Connector::Mojolicious->new($self)->start();
@@ -43,11 +50,11 @@ have to create a hook that is executed on every request and pass the Mojolicious
 
 =cut
 
-=head1 SUBROUTINES/METHODS
+=head1 METHODS
 
-=head2 new
+=head2 new($query)
 
-Construct an object of the class and save a Mojolicious controller object as an attribute.
+This method is a simple constructor for an object oriented interface. It requires a Mojolicious controller object as parameter.
 
 =cut
 
@@ -65,9 +72,34 @@ sub new {
 	return $self;
 }
 
-=head2 gather_input
+=head2 get_client_ip()
 
-Gather the user input from the controller.
+This method returns the IP address of the client with the help of the controller. If Mojolicious is configured correctly this is the correct IP
+address even if a reverse proxy is used.
+
+=cut
+
+sub get_client_ip {
+	my ($self) = @_;
+
+	return $self->{'_query'}->tx->remote_address;
+}
+
+=head2 get_caller()
+
+This method returns the caller with the help of the controller. Since everything is routed through a front controller the selected route is the caller.
+
+=cut
+
+sub get_caller {
+	my ($self) = @_;
+
+	return $self->{'_query'}->req->url->path->to_string;
+}
+
+=head2 gather_input()
+
+This method gathers the user input with the help of the controller.
 
 =cut
 
@@ -121,9 +153,9 @@ sub gather_input {
 	}
 }
 
-=head2 defuse_input
+=head2 defuse_input($threats)
 
-Defuse dangerous input with the help of the controller.
+This method defuses dangerous input with the help of the controller.
 
 =cut
 
@@ -184,7 +216,7 @@ sub defuse_input {
 	if ($self->{'_query'}->req->headers->cookie) {
 		my $cookie_string = '';
 
-		# Cookie handling in Mojolicious is very strange. No encoding.
+		# No encoding on purpose. That's how Mojolicious roles.
 		foreach my $key (keys %cookies) {
 			foreach my $value (@{$cookies{$key}}) {
 				$cookie_string .= $key . '=' . $value . ';';
@@ -199,33 +231,9 @@ sub defuse_input {
 	}
 }
 
-=head2 get_client_ip
+=head2 error()
 
-Get the ip address of the client from the controller.
-
-=cut
-
-sub get_client_ip {
-	my ($self) = @_;
-
-	return $self->{'_query'}->tx->remote_address;
-}
-
-=head2 get_caller
-
-Get the caller from the controller, i.e. the route.
-
-=cut
-
-sub get_caller {
-	my ($self) = @_;
-
-	return $self->{'_query'}->req->url->path->to_string;
-}
-
-=head2 error
-
-Render an error message.
+This method renders an error message with the help of the controller.
 
 =cut
 
@@ -237,11 +245,11 @@ sub error {
 
 =head1 AUTHOR
 
-Hendrik Buchwald, C<< <hb at zecure.org> >>
+Hendrik Buchwald, C<< <hb@zecure.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-shadowd-connector at rt.cpan.org>, or through the web interface at
+Please report any bugs or feature requests to C<bug-shadowd-connector@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll automatically
 be notified of progress on your bug as I make changes.
 
@@ -280,7 +288,7 @@ L<http://search.cpan.org/dist/Shadowd-Connector/>
 
 Shadow Daemon -- Web Application Firewall
 
-  Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb at zecure.org> >>
+Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb@zecure.org> >>
 
 This file is part of Shadow Daemon. Shadow Daemon is free software: you can
 redistribute it and/or modify it under the terms of the GNU General Public
