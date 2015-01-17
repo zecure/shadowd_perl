@@ -10,21 +10,44 @@ Shadowd::Connector::Mojolicious - Shadow Daemon connector for Mojolicious applic
 
 =head1 VERSION
 
-Version 1.00
+Version 1.0.0
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = '1.0.0';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+Shadowd::Connector::Mojolicious is the Shadow Daemon connector for Perl Mojolicious applications. To use this module you
+have to create a hook that is executed on every request and pass the Mojolicious controller object to the constructor.
+
+=head2 Mojolicious
+
+    sub startup {
+      my $app = shift;
+    
+      $app->hook(before_dispatch => sub {
+        my $self = shift;
+        return Shadowd::Connector::Mojolicious->new($self)->start();
+      });
+
+      # ...
+    }
+
+=head2 Mojolicious::Lite
+
+    under sub {
+      my $self = shift;
+      return Shadowd::Connector::Mojolicious->new($self)->start();
+    };
 
 =cut
 
 =head1 SUBROUTINES/METHODS
 
 =head2 new
+
+Construct an object of the class and save a Mojolicious controller object as an attribute.
 
 =cut
 
@@ -43,6 +66,8 @@ sub new {
 }
 
 =head2 gather_input
+
+Gather the user input from the controller.
 
 =cut
 
@@ -97,6 +122,8 @@ sub gather_input {
 }
 
 =head2 defuse_input
+
+Defuse dangerous input with the help of the controller.
 
 =cut
 
@@ -174,6 +201,8 @@ sub defuse_input {
 
 =head2 get_client_ip
 
+Get the ip address of the client from the controller.
+
 =cut
 
 sub get_client_ip {
@@ -183,6 +212,8 @@ sub get_client_ip {
 }
 
 =head2 get_caller
+
+Get the caller from the controller, i.e. the route.
 
 =cut
 
@@ -194,6 +225,8 @@ sub get_caller {
 
 =head2 error
 
+Render an error message.
+
 =cut
 
 sub error {
@@ -202,4 +235,65 @@ sub error {
 	$self->{'_query'}->render(data => '<h1>500 Internal Server Error</h1>', status => 500);
 }
 
-1;
+=head1 AUTHOR
+
+Hendrik Buchwald, C<< <hb at zecure.org> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C<bug-shadowd-connector at rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll automatically
+be notified of progress on your bug as I make changes.
+
+It is also possible to report bugs via Github at L<https://github.com/zecure/shadowd_perl/issues>.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Shadowd::Connector
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Shadowd-Connector>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Shadowd-Connector>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Shadowd-Connector>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Shadowd-Connector/>
+
+=back
+
+=head1 LICENSE AND COPYRIGHT
+
+Shadow Daemon -- Web Application Firewall
+
+  Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb at zecure.org> >>
+
+This file is part of Shadow Daemon. Shadow Daemon is free software: you can
+redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, version 2.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see L<http://www.gnu.org/licenses/>.
+
+=cut
+
+1; # End of Shadowd::Connector::Mojolicious

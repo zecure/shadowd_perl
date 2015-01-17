@@ -28,21 +28,24 @@ Shadowd::Connector - Shadow Daemon connector base
 
 =head1 VERSION
 
-Version 1.00
+Version 1.0.0
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = '1.0.0';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+Shadowd::Connector is the base class to connect applications to the Shadow Daemon background server. It is not possible
+to use this module directly, because there are abstract methods that have to be overwritten.
 
 =cut
 
 =head1 SUBROUTINES/METHODS
 
 =head2 new
+
+Simple constructor for an object oriented interface.
 
 =cut
 
@@ -56,11 +59,15 @@ sub new {
 
 =head2 get_client_ip
 
+Abstract method that has to return the IP address of the client.
+
 =cut
 
 sub get_client_ip: Abstract;
 
 =head2 get_caller
+
+Abstract method that has to return the caller, i.e. the requested resource.
 
 =cut
 
@@ -68,11 +75,15 @@ sub get_caller: Abstract;
 
 =head2 gather_input
 
+Abstract method that has to save the user input in the class attribute I<_input> (hash).
+
 =cut
 
 sub gather_input: Abstract;
 
 =head2 defuse_input
+
+Abstract method that has to remove elements from the first parameter (array) from the user input.
 
 =cut
 
@@ -80,11 +91,15 @@ sub defuse_input: Abstract;
 
 =head2 error
 
+Abstract method that has to display a I<500> error.
+
 =cut
 
 sub error: Abstract;
 
 =head2 init_config
+
+Initialize the configuration.
 
 =cut
 
@@ -112,6 +127,8 @@ sub init_config {
 
 =head2 get_config
 
+Get values from the configuration file.
+
 =cut
 
 sub get_config {
@@ -130,6 +147,8 @@ sub get_config {
 
 =head2 get_input
 
+Get the user input that is compiled by I<gather_input>.
+
 =cut
 
 sub get_input {
@@ -139,6 +158,8 @@ sub get_input {
 }
 
 =head2 remove_ignored
+
+Remove user input that should be ignored from the class attribute I<_input>.
 
 =cut
 
@@ -176,6 +197,8 @@ sub remove_ignored {
 }
 
 =head2 send_input
+
+Send the user input and other data to the background server and return the parsed response.
 
 =cut
 
@@ -219,6 +242,8 @@ sub send_input {
 
 =head2 parse_output
 
+Parse the response of the background server.
+
 =cut
 
 sub parse_output {
@@ -238,6 +263,8 @@ sub parse_output {
 
 =head2 sign
 
+Sign the input with a secret key to authenticate requests without having to send the password.
+
 =cut
 
 sub sign {
@@ -247,6 +274,8 @@ sub sign {
 }
 
 =head2 log
+
+Log the message to a file.
 
 =cut
 
@@ -264,6 +293,8 @@ sub log {
 
 =head2 escape_key
 
+Escape keys, i.e. single elements of a path.
+
 =cut
 
 sub escape_key {
@@ -276,6 +307,8 @@ sub escape_key {
 }
 
 =head2 unescape_key
+
+Unescape keys, i.e. single elements of a path.
 
 =cut
 
@@ -290,6 +323,8 @@ sub unescape_key {
 
 =head2 split_path
 
+Split a path into keys.
+
 =cut
 
 sub split_path {
@@ -299,6 +334,8 @@ sub split_path {
 }
 
 =head2 start
+
+Connect the different components of the module to gather input, send it to the server and defuse threats.
 
 =cut
 
@@ -353,9 +390,11 @@ Hendrik Buchwald, C<< <hb at zecure.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to L<https://github.com/zecure/shadowd_perl/issues>, C<bug-shadowd-connector at rt.cpan.org>,
-or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+Please report any bugs or feature requests to C<bug-shadowd-connector at rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shadowd-Connector>.  I will be notified, and then you'll automatically
+be notified of progress on your bug as I make changes.
+
+It is also possible to report bugs via Github at L<https://github.com/zecure/shadowd_perl/issues>.
 
 =head1 SUPPORT
 

@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker qw(WriteMakefile);
 WriteMakefile(
 	NAME               => 'Shadowd::Connector',
 	VERSION_FROM       => 'lib/Shadowd/Connector.pm',
-	ABSTRACT_FROM      => 'lib/Shadowd/Connector.pm',
+	ABSTRACT           => 'Connector for the Shadow Daemon web application firewall',
 	AUTHOR             => 'Hendrik Buchwald <hb@zecure.org>',
 	LICENSE            => 'GPLv2',
 	CONFIGURE_REQUIRES => {
