@@ -1,5 +1,6 @@
 package Shadowd::Connector::CGI;
 
+use 5.010;
 use strict;
 
 use base 'Shadowd::Connector';

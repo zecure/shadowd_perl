@@ -1,5 +1,6 @@
 package Shadowd::Connector::Mojolicious;
 
+use 5.010;
 use strict;
 
 use base 'Shadowd::Connector';

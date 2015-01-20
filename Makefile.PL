@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+
+use 5.010;
 use strict;
 
 use ExtUtils::MakeMaker qw(WriteMakefile);
@@ -27,6 +29,7 @@ WriteMakefile(
 		'Attribute::Abstract' => 0,
 		'POSIX'               => 0,
 	},
+	MIN_PERL_VERSION   => 5.010,
 	dist               => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 	clean              => { FILES => 'Shadowd-Connector-*' },
 );
