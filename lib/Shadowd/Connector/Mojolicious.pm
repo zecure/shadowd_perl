@@ -11,11 +11,11 @@ Shadowd::Connector::Mojolicious - Shadow Daemon Mojolicious Connector
 
 =head1 VERSION
 
-Version 1.0.3
+Version 2.0.0
 
 =cut
 
-our $VERSION = '1.0.3';
+our $VERSION = '2.0.0';
 
 =head1 SYNOPSIS
 

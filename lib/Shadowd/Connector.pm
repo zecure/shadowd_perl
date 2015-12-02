@@ -13,7 +13,7 @@ use Attribute::Abstract;
 use POSIX qw(strftime);
 
 use constant {
-	SHADOWD_CONNECTOR_VERSION        => '1.0.2-perl',
+	SHADOWD_CONNECTOR_VERSION        => '2.0.0-perl',
 	SHADOWD_CONNECTOR_CONFIG         => '/etc/shadowd/connectors.ini',
 	SHADOWD_CONNECTOR_CONFIG_SECTION => 'shadowd_perl',
 	SHADOWD_LOG                      => '/var/log/shadowd.log',
@@ -30,11 +30,11 @@ Shadowd::Connector - Shadow Daemon Connector (Base)
 
 =head1 VERSION
 
-Version 1.0.3
+Version 2.0.0
 
 =cut
 
-our $VERSION = '1.0.3';
+our $VERSION = '2.0.0';
 
 =head1 SYNOPSIS
 
