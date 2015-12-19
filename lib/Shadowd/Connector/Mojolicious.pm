@@ -123,10 +123,14 @@ sub gather_input {
 
 		if ($#values > 0){
 			for my $index (0 .. $#values) {
-				$self->{'_input'}->{$path . '|' . $index} = $values[$index];
+				if (!$values[$index]->isa('Mojo::Upload')) {
+					$self->{'_input'}->{$path . '|' . $index} = $values[$index];
+				}
 			}
 		} else {
-			$self->{'_input'}->{$path} = $values[0];
+			if (!$values[0]->isa('Mojo::Upload')) {
+				$self->{'_input'}->{$path} = $values[0];
+			}
 		}
 	}
 
