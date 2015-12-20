@@ -19,7 +19,7 @@ our $VERSION = '2.0.0';
 
 =head1 SYNOPSIS
 
-B<Shadow Daemon> is a collection of tools to I<detect>, I<protocol> and I<prevent> I<attacks> on I<web applications>.
+B<Shadow Daemon> is a collection of tools to I<detect>, I<record> and I<prevent> I<attacks> on I<web applications>.
 Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
 It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
@@ -97,6 +97,18 @@ sub get_caller {
 	my ($self) = @_;
 
 	return $self->{'_query'}->req->url->path->to_string;
+}
+
+=head2 get_resource()
+
+This method returns the request resource.
+
+=cut
+
+sub get_resource {
+	my ($self) = @_;
+
+	return $self->{'_query'}->req->url->to_string;
 }
 
 =head2 gather_input()
@@ -235,6 +247,18 @@ sub defuse_input {
 		# Overwrite the cookie string.
 		$self->{'_query'}->req->headers->cookie($cookie_string);
 	}
+}
+
+=head2 gather_hashes()
+
+This module does not support the integrity check, because everything is routed through one file.
+
+=cut
+
+sub gather_hashes {
+	my ($self) = @_;
+
+	$self->{'_hashes'} = {};
 }
 
 =head2 error()

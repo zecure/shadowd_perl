@@ -38,7 +38,7 @@ our $VERSION = '2.0.0';
 
 =head1 SYNOPSIS
 
-B<Shadow Daemon> is a collection of tools to I<detect>, I<protocol> and I<prevent> I<attacks> on I<web applications>.
+B<Shadow Daemon> is a collection of tools to I<detect>, I<record> and I<prevent> I<attacks> on I<web applications>.
 Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
 It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
@@ -73,11 +73,19 @@ sub get_client_ip: Abstract;
 
 =head2 get_caller()
 
-This is an abstract method that has to be implemented by a subclass. It has to return the caller, i.e. the requested resource.
+This is an abstract method that has to be implemented by a subclass. It has to return the name of the caller.
 
 =cut
 
 sub get_caller: Abstract;
+
+=head2 get_resource()
+
+This is an abstract method that has to be implemented by a subclass. It has to return the the requested resource.
+
+=cut
+
+sub get_resource: Abstract;
 
 =head2 gather_input()
 
@@ -94,6 +102,15 @@ This is an abstract method that has to be implemented by a subclass. It has to r
 =cut
 
 sub defuse_input: Abstract;
+
+=head2 gather_hashes()
+
+This is an abstract method that has to be implemented by a subclass. It has to save the cryptographically secure checksums of the
+executed script in the class attribute I<_hashes>.
+
+=cut
+
+sub gather_hashes: Abstract;
 
 =head2 error()
 
@@ -161,6 +178,18 @@ sub get_input {
 	my ($self) = @_;
 
 	return $self->{'_input'}
+}
+
+=head2 get_hashes()
+
+This method returns the hashes that are brought together by I<gather_hashes>.
+
+=cut
+
+sub get_hashes {
+	my ($self) = @_;
+
+	return $self->{'_hashes'}
 }
 
 =head2 remove_ignored($file)
@@ -233,11 +262,16 @@ sub send_input {
 		'version'   => SHADOWD_CONNECTOR_VERSION,
 		'client_ip' => $self->get_client_ip,
 		'caller'    => $self->get_caller,
-		'input'     => $self->get_input
+		'resource'  => $self->get_resource,
+		'input'     => $self->get_input,
+		'hashes'    => $self->get_hashes
 	);
 
-	my $json = encode_json(\%input_data);
-	print $connection $profile . "\n" . $self->sign($key, $json) . "\n" . $json . "\n";
+	my $json = JSON->new->allow_nonref;
+	$json->allow_blessed();
+	my $json_text = $json->encode(\%input_data);
+
+	print $connection $profile . "\n" . $self->sign($key, $json_text) . "\n" . $json_text . "\n";
 
 	my $output = <$connection>;
 
@@ -352,6 +386,7 @@ sub start {
 		$self->init_config;
 
 		$self->gather_input;
+		$self->gather_hashes;
 
 		my $ignored = $self->get_config('ignore');
 		if ($ignored) {
