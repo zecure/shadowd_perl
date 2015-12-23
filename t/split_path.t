@@ -2,7 +2,7 @@
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
-use Test::Simple tests => 5;
+use Test::Simple tests => 6;
 use Shadowd::Connector;
 
 my $shadowd = Shadowd::Connector->new();
@@ -21,3 +21,6 @@ ok(($#test4 == 1) && ($test4[0] eq 'foo\\\\') && ($test4[1] eq 'bar'));
 
 my @test5 = $shadowd->split_path('foo\\\\\\|bar');
 ok(($#test5 == 0) && ($test5[0] eq 'foo\\\\\\|bar'));
+
+my @test6 = $shadowd->split_path('foo\\');
+ok(($#test6 == 0) && ($test6[0] eq 'foo\\'));
