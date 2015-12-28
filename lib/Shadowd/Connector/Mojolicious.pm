@@ -236,6 +236,8 @@ sub defuse_input {
 
 		# No encoding on purpose. That's how Mojolicious roles.
 		foreach my $key (keys %cookies) {
+			$self->{'_query'}->cookie(@{$cookies{$key}});
+
 			foreach my $value (@{$cookies{$key}}) {
 				$cookie_string .= $key . '=' . $value . ';';
 			}
