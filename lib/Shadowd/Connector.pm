@@ -4,7 +4,6 @@ use 5.010;
 use strict;
 
 use JSON;
-use Switch;
 use Config::IniFiles;
 use IO::Socket;
 use IO::Socket::SSL;
@@ -21,7 +20,8 @@ use constant {
 	STATUS_BAD_REQUEST               => 2,
 	STATUS_BAD_SIGNATURE             => 3,
 	STATUS_BAD_JSON                  => 4,
-	STATUS_ATTACK                    => 5
+	STATUS_ATTACK                    => 5,
+	STATUS_CRITICAL_ATTACK           => 6
 };
 
 =head1 NAME
@@ -291,13 +291,29 @@ sub parse_output {
 
 	my $output_data = decode_json($output);
 
-	switch ($output_data->{'status'}) {
-		case STATUS_OK            { return 0; }
-		case STATUS_BAD_REQUEST   { die('bad request'); }
-		case STATUS_BAD_SIGNATURE { die('bad signature'); }
-		case STATUS_BAD_JSON      { die('bad json'); }
-		case STATUS_ATTACK        { return $output_data->{'threats'}; }
-		else                      { die('processing error'); }
+	if ($output_data->{'status'} eq STATUS_OK) {
+		return {
+			'attack' => 0
+		};
+	} elsif ($output_data->{'status'} eq STATUS_BAD_REQUEST) {
+		die('bad request');
+	} elsif ($output_data->{'status'} eq STATUS_BAD_SIGNATURE) {
+		die('bad signature');
+	} elsif ($output_data->{'status'} eq STATUS_BAD_JSON) {
+		die('bad json');
+	} elsif ($output_data->{'status'} eq STATUS_ATTACK) {
+		return {
+			'attack'   => 1,
+			'critical' => 0,
+			'threats'  => $output_data->{'threats'}
+		};
+	} elsif ($output_data->{'status'} eq STATUS_CRITICAL_ATTACK) {
+		return {
+			'attack'   => 1,
+			'critical' => 1
+		};
+	} else {
+		die('processing error');
 	}
 }
 
@@ -325,8 +341,9 @@ sub log {
 	my $file = $self->get_config('log', 0, SHADOWD_LOG);
 	open my $handler, '>>' . $file or die('could not open log file: ' . $!);
 
+	chomp($message);
 	my $datetime = strftime('%Y-%m-%d %H:%M:%S', localtime);
-	print $handler $datetime . "\t" . $message;
+	print $handler $datetime . "\t" . $message . "\n";
 
 	close $handler;
 }
@@ -393,7 +410,7 @@ sub start {
 			$self->remove_ignored($ignored);
 		}
 
-		my $threats = $self->send_input(
+		my $status = $self->send_input(
 			$self->get_config('host', 0, '127.0.0.1'),
 			$self->get_config('port', 0, '9115'),
 			$self->get_config('profile', 1),
@@ -401,12 +418,18 @@ sub start {
 			$self->get_config('ssl')
 		);
 
-		if (!$self->get_config('observe') && $threats) {
-			$self->defuse_input($threats);
-		}
+		if (!$self->get_config('observe') && $status->{'attack'}) {
+			if ($status->{'critical'}) {
+				die('shadowd: stopped critical attack from client: ' . $self->get_client_ip);
+			}
 
-		if ($self->get_config('debug') && $threats) {
-			$self->log('shadowd: removed threat from client: ' . $self->get_client_ip . "\n");
+			if (!$self->defuse_input($status->{'threats'})) {
+				die('shadowd: stopped attack from client: ' . $self->get_client_ip);
+			}
+
+			if ($self->get_config('debug')) {
+				$self->log('shadowd: removed threat from client: ' . $self->get_client_ip);
+			}
 		}
 	};
 
@@ -417,7 +440,6 @@ sub start {
 
 		unless ($self->get_config('observe')) {
 			$self->error;
-
 			return undef;
 		}
 	}

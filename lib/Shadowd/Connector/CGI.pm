@@ -177,6 +177,9 @@ sub defuse_input {
 		# Overwrite the cookie string.
 		$ENV{'HTTP_COOKIE'} = $cookie_string;
 	}
+
+	# Don't stop the complete request.
+	return 1;
 }
 
 =head2 gather_hashes()

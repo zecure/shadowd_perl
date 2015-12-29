@@ -249,6 +249,9 @@ sub defuse_input {
 		# Overwrite the cookie string.
 		$self->{'_query'}->req->headers->cookie($cookie_string);
 	}
+
+	# Don't stop the complete request.
+	return 1;
 }
 
 =head2 gather_hashes()
