@@ -1,7 +1,9 @@
 [![Build Status](https://travis-ci.org/zecure/shadowd_perl.svg)](https://travis-ci.org/zecure/shadowd_perl)
 ![Logo](http://shadowd.zecure.org/img/logo_small.png)
 
-**Shadow Daemon** is a collection of tools to **detect**, **record** and **prevent** **attacks** on *web applications*. Technically speaking, Shadow Daemon is a **web application firewall** that intercepts requests and filters out malicious parameters. It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
+**Shadow Daemon** is a collection of tools to **detect**, **record** and **prevent** **attacks** on *web applications*.
+Technically speaking, Shadow Daemon is a **web application firewall** that intercepts requests and filters out malicious parameters.
+It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
 This component can be used to connect Perl applications with the [background server](https://github.com/zecure/shadowd).
 
@@ -19,7 +21,8 @@ It is also possible to clone this repository and install the modules manually:
     make
     make install
 
-You also have to create a configuration file. You can copy *misc/examples/connectors.ini* to */etc/shadowd/connectors.ini*. The example configuration is annotated and should be self-explanatory.
+You also have to create a configuration file. You can copy *misc/examples/connectors.ini* to */etc/shadowd/connectors.ini*.
+The example configuration is annotated and should be self-explanatory.
 
 ## CGI
 To protect CGI applications you simply have to load the module:
