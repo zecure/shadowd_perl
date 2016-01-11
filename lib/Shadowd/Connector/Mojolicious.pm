@@ -11,15 +11,15 @@ Shadowd::Connector::Mojolicious - Shadow Daemon Mojolicious Connector
 
 =head1 VERSION
 
-Version 1.0.3
+Version 2.0.0
 
 =cut
 
-our $VERSION = '1.0.3';
+our $VERSION = '2.0.0';
 
 =head1 SYNOPSIS
 
-B<Shadow Daemon> is a collection of tools to I<detect>, I<protocol> and I<prevent> I<attacks> on I<web applications>.
+B<Shadow Daemon> is a collection of tools to I<detect>, I<record> and I<prevent> I<attacks> on I<web applications>.
 Technically speaking, Shadow Daemon is a B<web application firewall> that intercepts requests and filters out malicious parameters.
 It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
 
@@ -61,17 +61,17 @@ This method is a simple constructor for an object oriented interface. It require
 =cut
 
 sub new {
-	my ($class, $query) = @_;
+    my ($class, $query) = @_;
 
-	my $self = $class->SUPER::new;
-	$self->{'_query'} = $query;
+    my $self = $class->SUPER::new;
+    $self->{'_query'} = $query;
 
-	# Mojolicious supports cookies with shared names, so first we have to get all unique names.
-	foreach my $cookie (@{$self->{'_query'}->req->cookies}) {
-		$self->{'_cookies'}->{$cookie->name} = 1;
-	}
+    # Mojolicious supports cookies with shared names, so first we have to get all unique names.
+    foreach my $cookie (@{$self->{'_query'}->req->cookies}) {
+        $self->{'_cookies'}->{$cookie->name} = 1;
+    }
 
-	return $self;
+    return $self;
 }
 
 =head2 get_client_ip()
@@ -82,9 +82,9 @@ address even if a reverse proxy is used.
 =cut
 
 sub get_client_ip {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	return $self->{'_query'}->tx->remote_address;
+    return $self->{'_query'}->tx->remote_address;
 }
 
 =head2 get_caller()
@@ -94,9 +94,21 @@ This method returns the caller with the help of the controller. Since everything
 =cut
 
 sub get_caller {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	return $self->{'_query'}->req->url->path->to_string;
+    return $self->{'_query'}->req->url->path->to_string;
+}
+
+=head2 get_resource()
+
+This method returns the request resource.
+
+=cut
+
+sub get_resource {
+    my ($self) = @_;
+
+    return $self->{'_query'}->req->url->to_string;
 }
 
 =head2 gather_input()
@@ -106,53 +118,57 @@ This method gathers the user input with the help of the controller.
 =cut
 
 sub gather_input {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	$self->{'_input'} = {};
+    $self->{'_input'} = {};
 
-	foreach my $key ($self->{'_query'}->param) {
-		my $path = $self->{'_query'}->req->method . '|' . $self->escape_key($key);
-		my @values;
+    foreach my $key ($self->{'_query'}->param) {
+        my $path = $self->{'_query'}->req->method . '|' . $self->escape_key($key);
+        my @values;
 
-		# Mojolicious 5 has separate methods to get input with the same name.
-		if ($self->{'_query'}->can('every_param')) {
-			@values = @{$self->{'_query'}->every_param($key)};
-		} else {
-			@values = $self->{'_query'}->param($key);
-		}
+        # Mojolicious 5 has separate methods to get input with the same name.
+        if ($self->{'_query'}->can('every_param')) {
+            @values = @{$self->{'_query'}->every_param($key)};
+        } else {
+            @values = $self->{'_query'}->param($key);
+        }
 
-		if ($#values > 0){
-			for my $index (0 .. $#values) {
-				$self->{'_input'}->{$path . '|' . $index} = $values[$index];
-			}
-		} else {
-			$self->{'_input'}->{$path} = $values[0];
-		}
-	}
+        if ($#values > 0){
+            for my $index (0 .. $#values) {
+                if (!$values[$index]->isa('Mojo::Upload')) {
+                    $self->{'_input'}->{$path . '|' . $index} = $values[$index];
+                }
+            }
+        } else {
+            if (!$values[0]->isa('Mojo::Upload')) {
+                $self->{'_input'}->{$path} = $values[0];
+            }
+        }
+    }
 
-	foreach my $key (keys %{$self->{'_cookies'}}) {
-		my @values;
+    foreach my $key (keys %{$self->{'_cookies'}}) {
+        my @values;
 
-		if ($self->{'_query'}->can('every_cookie')) {
-			@values = @{$self->{'_query'}->every_cookie($key)};
-		} else {
-			@values = $self->{'_query'}->cookie($key);
-		}
+        if ($self->{'_query'}->can('every_cookie')) {
+            @values = @{$self->{'_query'}->every_cookie($key)};
+        } else {
+            @values = $self->{'_query'}->cookie($key);
+        }
 
-		if ($#values > 0){
-			for my $index (0 .. $#values) {
-				$self->{'_input'}->{'COOKIE|' . $self->escape_key($key) . '|' . $index} = $values[$index];
-			}
-		} else {
-			$self->{'_input'}->{'COOKIE|' . $self->escape_key($key)} = $values[0];
-		}
-	}
+        if ($#values > 0){
+            for my $index (0 .. $#values) {
+                $self->{'_input'}->{'COOKIE|' . $self->escape_key($key) . '|' . $index} = $values[$index];
+            }
+        } else {
+            $self->{'_input'}->{'COOKIE|' . $self->escape_key($key)} = $values[0];
+        }
+    }
 
-	my $headers = $self->{'_query'}->req->headers->to_hash;
+    my $headers = $self->{'_query'}->req->headers->to_hash;
 
-	foreach my $key (keys %$headers) {
-		$self->{'_input'}->{'SERVER|' . $self->escape_key($key)} = $headers->{$key};
-	}
+    foreach my $key (keys %$headers) {
+        $self->{'_input'}->{'SERVER|' . $self->escape_key($key)} = $headers->{$key};
+    }
 }
 
 =head2 defuse_input($threats)
@@ -162,75 +178,92 @@ This method defuses dangerous input with the help of the controller.
 =cut
 
 sub defuse_input {
-	my ($self, $threats) = @_;
+    my ($self, $threats) = @_;
 
-	my %cookies;
+    my %cookies;
 
-	foreach my $key (keys %{$self->{'_cookies'}}) {
-		my @values;
+    foreach my $key (keys %{$self->{'_cookies'}}) {
+        my @values;
 
-		if ($self->{'_query'}->can('every_cookie')) {
-			@values = @{$self->{'_query'}->every_cookie($key)};
-		} else {
-			@values = $self->{'_query'}->cookie($key);
-		}
+        if ($self->{'_query'}->can('every_cookie')) {
+            @values = @{$self->{'_query'}->every_cookie($key)};
+        } else {
+            @values = $self->{'_query'}->cookie($key);
+        }
 
-		$cookies{$key} = \@values;
-	}
+        $cookies{$key} = \@values;
+    }
 
-	foreach my $path (@{$threats}) {
-		my @path_split = $self->split_path($path);
+    foreach my $path (@{$threats}) {
+        my @path_split = $self->split_path($path);
 
-		if ($#path_split < 1) {
-			next;
-		}
+        if ($#path_split < 1) {
+            next;
+        }
 
-		my $key = $self->unescape_key($path_split[1]);
+        my $key = $self->unescape_key($path_split[1]);
 
-		if ($path_split[0] eq 'SERVER') {
-			$self->{'_query'}->req->headers->header($key, '');
-		} elsif ($path_split[0] eq 'COOKIE') {
-			if ($#path_split == 1) {
-				$cookies{$key} = [''];
-			} else {
-				my $array = $cookies{$key};
-				$array->[$path_split[2]] = '';
-				$cookies{$key} = $array;
-			}
-		} else {
-			if ($#path_split == 1) {
-				$self->{'_query'}->req->param($key, '');
-			} else {
-				my @values;
+        if ($path_split[0] eq 'SERVER') {
+            $self->{'_query'}->req->headers->header($key, '');
+        } elsif ($path_split[0] eq 'COOKIE') {
+            if ($#path_split == 1) {
+                $cookies{$key} = [''];
+            } else {
+                my $array = $cookies{$key};
+                $array->[$path_split[2]] = '';
+                $cookies{$key} = $array;
+            }
+        } else {
+            if ($#path_split == 1) {
+                $self->{'_query'}->req->param($key, '');
+            } else {
+                my @values;
 
-				if ($self->{'_query'}->can('every_param')) {
-					@values = @{$self->{'_query'}->every_param($key)};
-				} else {
-					@values = $self->{'_query'}->param($key);
-				}
+                if ($self->{'_query'}->can('every_param')) {
+                    @values = @{$self->{'_query'}->every_param($key)};
+                } else {
+                    @values = $self->{'_query'}->param($key);
+                }
 
-				$values[$path_split[2]] = '';
-				$self->{'_query'}->req->param($key, @values);
-			}
-		}
-	}
+                $values[$path_split[2]] = '';
+                $self->{'_query'}->req->param($key, @values);
+            }
+        }
+    }
 
-	if ($self->{'_query'}->req->headers->cookie) {
-		my $cookie_string = '';
+    if ($self->{'_query'}->req->headers->cookie) {
+        my $cookie_string = '';
 
-		# No encoding on purpose. That's how Mojolicious roles.
-		foreach my $key (keys %cookies) {
-			foreach my $value (@{$cookies{$key}}) {
-				$cookie_string .= $key . '=' . $value . ';';
-			}
-		}
+        # No encoding on purpose. That's how Mojolicious roles.
+        foreach my $key (keys %cookies) {
+            $self->{'_query'}->cookie(@{$cookies{$key}});
 
-		# Remove last semicolon.
-		chop($cookie_string);
+            foreach my $value (@{$cookies{$key}}) {
+                $cookie_string .= $key . '=' . $value . ';';
+            }
+        }
 
-		# Overwrite the cookie string.
-		$self->{'_query'}->req->headers->cookie($cookie_string);
-	}
+        # Remove last semicolon.
+        chop($cookie_string);
+
+        # Overwrite the cookie string.
+        $self->{'_query'}->req->headers->cookie($cookie_string);
+    }
+
+    # Don't stop the complete request.
+    return 1;
+}
+
+=head2 gather_hashes()
+
+This module does not support the integrity check, because everything is routed through one file.
+
+=cut
+
+sub gather_hashes {
+    my ($self) = @_;
+
+    $self->{'_hashes'} = {};
 }
 
 =head2 error()
@@ -240,9 +273,9 @@ This method renders an error message with the help of the controller.
 =cut
 
 sub error {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	$self->{'_query'}->render(data => '<h1>500 Internal Server Error</h1>', status => 500);
+    $self->{'_query'}->render(data => '<h1>500 Internal Server Error</h1>', status => 500);
 }
 
 =head1 AUTHOR
@@ -290,7 +323,7 @@ L<http://search.cpan.org/dist/Shadowd-Connector/>
 
 Shadow Daemon -- Web Application Firewall
 
-Copyright (C) 2014-2015 Hendrik Buchwald C<< <hb@zecure.org> >>
+Copyright (C) 2014-2016 Hendrik Buchwald C<< <hb@zecure.org> >>
 
 This file is part of Shadow Daemon. Shadow Daemon is free software: you can
 redistribute it and/or modify it under the terms of the GNU General Public

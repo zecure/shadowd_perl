@@ -7,3 +7,6 @@ lib/Shadowd/Connector.pm
 lib/Shadowd/Connector/CGI.pm
 lib/Shadowd/Connector/Mojolicious.pm
 t/00-load.t
+t/escape_key.t
+t/split_path.t
+t/unescape_key.t
