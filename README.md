@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/zecure/shadowd_perl.svg)](https://travis-ci.org/zecure/shadowd_perl)
+[![Build Status](https://travis-ci.com/zecure/shadowd_perl.svg)](https://travis-ci.com/zecure/shadowd_perl)
 ![Logo](http://shadowd.zecure.org/img/logo_small.png)
 
 **Shadow Daemon** is a collection of tools to **detect**, **record** and **prevent** **attacks** on *web applications*.
