@@ -1,0 +1,28 @@
+name: Analyze
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  run:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+        perl-version: ['5.34', '5.32', '5.30']
+    name: Perl ${{ matrix.perl-version }} Test on ${{ matrix.operating-system }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl-version }}
+      - name: Install dependencies
+        run: cpan install Crypt::Mac::HMA
+      - name: Run tests
+        run: make && make test
+
