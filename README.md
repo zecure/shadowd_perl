@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/zecure/shadowd_perl/actions/workflows/analyze.yml/badge.svg)](https://github.com/zecure/shadowd_perl/actions/workflows/analyze.yml)
 
 **Shadow Daemon** is a *web application firewall* that intercepts requests at application-level.
-This repository contains a component of Shadow Daemon to connect Python applications with the [shadowd](https://github.com/zecure/shadowd) server.
+This repository contains a component of Shadow Daemon to connect Perl applications with the [shadowd](https://github.com/zecure/shadowd) server.
 
 # Documentation
 For the full documentation please refer to [shadowd.zecure.org](https://shadowd.zecure.org/).
