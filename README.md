@@ -1,11 +1,9 @@
-[![Build Status](https://travis-ci.org/zecure/shadowd_perl.svg)](https://travis-ci.org/zecure/shadowd_perl)
-![Logo](http://shadowd.zecure.org/img/logo_small.png)
+![Logo](https://shadowd.zecure.org/img/logo_small.png)
 
-**Shadow Daemon** is a collection of tools to **detect**, **record** and **prevent** **attacks** on *web applications*.
-Technically speaking, Shadow Daemon is a **web application firewall** that intercepts requests and filters out malicious parameters.
-It is a modular system that separates web application, analysis and interface to increase security, flexibility and expandability.
+[![Build Status](https://github.com/zecure/shadowd_perl/actions/workflows/analyze.yml/badge.svg)](https://github.com/zecure/shadowd_perl/actions/workflows/analyze.yml)
 
-This component can be used to connect Perl applications with the [background server](https://github.com/zecure/shadowd).
+**Shadow Daemon** is a *web application firewall* that intercepts requests at application-level.
+This repository contains a component of Shadow Daemon to connect Perl applications with the [shadowd](https://github.com/zecure/shadowd) server.
 
 # Documentation
 For the full documentation please refer to [shadowd.zecure.org](https://shadowd.zecure.org/).
