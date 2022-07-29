@@ -21,8 +21,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl-version }}
-      - name: Install dependencies
-        run: cpan install Crypt::Mac::HMAC
+          install-modules: Crypt::Mac::HMAC
       - name: Run tests
         run: |
           perl Makefile.PL
