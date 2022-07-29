@@ -21,7 +21,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl-version }}
-          install-modules: Crypt::Mac::HMAC Config::IniFiles
+          install-modules: Crypt::Mac::HMAC Config::IniFiles Attribute::Abstract
       - name: Run tests
         run: |
           perl Makefile.PL
