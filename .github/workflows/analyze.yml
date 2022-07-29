@@ -22,7 +22,7 @@ jobs:
         with:
           perl-version: ${{ matrix.perl-version }}
       - name: Install dependencies
-        run: cpan install Crypt::Mac::HMA
+        run: cpan install Crypt::Mac::HMAC
       - name: Run tests
         run: |
           perl Makefile.PL
