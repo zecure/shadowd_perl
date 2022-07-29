@@ -24,5 +24,8 @@ jobs:
       - name: Install dependencies
         run: cpan install Crypt::Mac::HMA
       - name: Run tests
-        run: make && make test
+        run: |
+          perl Makefile.PL
+          make
+          make test
 
